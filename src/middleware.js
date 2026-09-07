@@ -1,7 +1,7 @@
 import createMiddleware from 'next-intl/middleware';
 import { defaultLocale, locales } from './i18n';
 
-export default createMiddleware({
+const intlMiddleware = createMiddleware({
   // A list of all locales that are supported
   locales,
 
@@ -11,6 +11,21 @@ export default createMiddleware({
   // For SEO purposes, you might want to use the Accept-Language header
   localeDetection: true
 });
+
+export default function middleware(request) {
+  const response = intlMiddleware(request);
+  const referralCode = request.nextUrl.searchParams.get('rf');
+  if (referralCode) {
+    response.cookies.set('rf', referralCode, {
+      maxAge: 60 * 60 * 24 * 30,
+      path: '/',
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production'
+    });
+  }
+
+  return response;
+}
 
 
 

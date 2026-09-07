@@ -341,9 +341,11 @@ export default function PaymentPage() {
                 });
             }
 
+            const cookieMatch = document.cookie.match(/(?:^|;\s*)rf=([^;]*)/);
+            const referralCode = cookieMatch ? decodeURIComponent(cookieMatch[1]) : '';
             const res = await CheckoutService.createOrder({
                 ...data,
-                referral_code:data.referral_code?.trim(),
+                referral_code: referralCode,
                 payment_method:viewSrc==='vj'?"SKYJOY":data.payment_method
             });
             if (!res.order_number) {
