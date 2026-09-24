@@ -103,6 +103,17 @@
       "priceIcon": "Biểu tượng giá",
       "packageImage": "Hình ảnh gói cước"
     },
+    "haveEsim": {
+      "titlePrefix": "Bạn đã có",
+      "titleHighlight": "eSIM?",
+      "subtitle": "Quản lý SIM hoặc mua thêm dung lượng cho SIM đã có",
+      "cta": "Truy cập SIM của bạn",
+      "benefits": {
+        "secure": "Bảo mật thông tin",
+        "fastTopup": "Mua thêm nhanh chóng",
+        "trackData": "Theo dõi dung lượng dễ dàng"
+      }
+    },
     "discovery": {
       "title": "Khám phá  ",
       "title1": "qua ứng dụng",
@@ -3160,5 +3171,67 @@
         "rejectedRegistration": "Đăng ký thất bại do hồ sơ chưa hợp lệ. Vui lòng kiểm tra và thực hiện lại Bạn nhé!"
       }
     }
+  },
+  "loginSim": {
+    "breadcrumbHome": "Trang chủ",
+    "breadcrumbCurrent": "Login SIM",
+    "titlePrefix": "Bạn đã có",
+    "titleHighlight": "eSIM?",
+    "subtitle": "Truy cập và quản lý SIM của bạn để theo dõi dung lượng, thời hạn và mua thêm gói data dễ dàng",
+    "emailTitle": "Truy cập bằng email",
+    "emailDesc": "Nhập email đã dùng để mua eSIM",
+    "emailPlaceholder": "Nhập email của bạn",
+    "serialTitle": "Truy cập bằng seri SIM",
+    "serialDesc": "Nhập seri SIM in trên giấy hoặc email",
+    "serialPlaceholder": "Nhập seri SIM (VD: 89860xxxx)",
+    "continue": "Tiếp tục",
+    "secureNote": "Thông tin của bạn được bảo mật tuyệt đối"
+  },
+  "manageSim": {
+    "breadcrumbHome": "Trang chủ",
+    "breadcrumbLogin": "Login SIM",
+    "breadcrumbCurrent": "Quản lý SIM",
+    "greeting": "Xin chào, {name}",
+    "subtitle": "Dưới đây là thông tin eSIM của bạn",
+    "statusActive": "Đang hoạt động",
+    "iccidLabel": "ICCID/Seri SIM",
+    "copyIccid": "Sao chép ICCID",
+    "copied": "Đã sao chép",
+    "country": "Quốc gia",
+    "currentPlan": "Gói hiện tại",
+    "activatedAt": "Ngày kích hoạt",
+    "expiresAt": "Ngày hết hạn",
+    "usageTitle": "Dung lượng & thời gian còn lại",
+    "dataLabel": "Dung lượng data",
+    "timeLabel": "Thời gian sử dụng còn lại",
+    "days": "Ngày",
+    "speedRemaining": "Tốc độ còn lại: {value}",
+    "speedNote": "Hết dung lượng tốc độ cao, truy cập internet sẽ bị giới hạn tốc độ.",
+    "buyMoreTitle": "Mua thêm dung lượng",
+    "buyMoreDesc": "Gia hạn hoặc mua thêm gói data để tiếp tục sử dụng.",
+    "buyMoreCta": "Mua thêm dung lượng",
+    "planInfoTitle": "Thông tin gói cước",
+    "planCurrent": "Gói cước hiện tại",
+    "planTotal": "Tổng dung lượng",
+    "planDaily": "Dung lượng/ngày",
+    "planCycle": "Chu kỳ",
+    "planPrice": "Giá gói",
+    "viewPlanDetail": "Xem chi tiết gói cước",
+    "historyTitle": "Lịch sử giao dịch",
+    "viewAll": "Xem tất cả",
+    "colDate": "Ngày giao dịch",
+    "colContent": "Nội dung",
+    "colPlan": "Gói cước",
+    "colAmount": "Số tiền",
+    "colStatus": "Trạng thái",
+    "statusSuccess": "Thành công",
+    "colDetail": "Xem chi tiết",
+    "viewDetail": "Xem chi tiết",
+    "txDetailTitle": "Chi tiết giao dịch",
+    "txOrderCode": "Mã đơn hàng",
+    "txPaymentMethod": "Phương thức thanh toán",
+    "txDataAdded": "Dung lượng cộng thêm",
+    "txValidDays": "Thời hạn gói",
+    "close": "Đóng"
   }
 }

@@ -103,6 +103,17 @@
       "priceIcon": "Price icon",
       "packageImage": "Package image"
     },
+    "haveEsim": {
+      "titlePrefix": "Already have an",
+      "titleHighlight": "eSIM?",
+      "subtitle": "Manage your SIM or top up data for an existing SIM",
+      "cta": "Access your SIM",
+      "benefits": {
+        "secure": "Secure information",
+        "fastTopup": "Top up quickly",
+        "trackData": "Track data easily"
+      }
+    },
     "discovery": {
       "title": "Discover ",
       "title1": " through the app",
@@ -3151,5 +3162,67 @@
         "rejectedRegistration": "Registration failed due to invalid profile. Please check and try again!"
       }
     }
+  },
+  "loginSim": {
+    "breadcrumbHome": "Home",
+    "breadcrumbCurrent": "Login SIM",
+    "titlePrefix": "Already have an",
+    "titleHighlight": "eSIM?",
+    "subtitle": "Access and manage your SIM to track data, validity, and top up easily",
+    "emailTitle": "Access with email",
+    "emailDesc": "Enter the email used to buy your eSIM",
+    "emailPlaceholder": "Enter your email",
+    "serialTitle": "Access with SIM serial",
+    "serialDesc": "Enter the SIM serial printed on paper or email",
+    "serialPlaceholder": "Enter SIM serial (e.g. 89860xxxx)",
+    "continue": "Continue",
+    "secureNote": "Your information is fully protected"
+  },
+  "manageSim": {
+    "breadcrumbHome": "Home",
+    "breadcrumbLogin": "Login SIM",
+    "breadcrumbCurrent": "Manage SIM",
+    "greeting": "Hello, {name}",
+    "subtitle": "Below is your eSIM information",
+    "statusActive": "Active",
+    "iccidLabel": "ICCID/SIM serial",
+    "copyIccid": "Copy ICCID",
+    "copied": "Copied",
+    "country": "Country",
+    "currentPlan": "Current plan",
+    "activatedAt": "Activation date",
+    "expiresAt": "Expiry date",
+    "usageTitle": "Data & remaining time",
+    "dataLabel": "Data remaining",
+    "timeLabel": "Remaining usage time",
+    "days": "Days",
+    "speedRemaining": "High-speed remaining: {value}",
+    "speedNote": "Once high-speed data runs out, internet access will be speed-limited.",
+    "buyMoreTitle": "Buy more data",
+    "buyMoreDesc": "Renew or buy extra data packs to keep using your SIM.",
+    "buyMoreCta": "Buy more data",
+    "planInfoTitle": "Plan details",
+    "planCurrent": "Current plan",
+    "planTotal": "Total data",
+    "planDaily": "Data per day",
+    "planCycle": "Cycle",
+    "planPrice": "Price",
+    "viewPlanDetail": "View plan details",
+    "historyTitle": "Transaction history",
+    "viewAll": "View all",
+    "colDate": "Date",
+    "colContent": "Description",
+    "colPlan": "Plan",
+    "colAmount": "Amount",
+    "colStatus": "Status",
+    "statusSuccess": "Success",
+    "colDetail": "Details",
+    "viewDetail": "View details",
+    "txDetailTitle": "Transaction details",
+    "txOrderCode": "Order code",
+    "txPaymentMethod": "Payment method",
+    "txDataAdded": "Data added",
+    "txValidDays": "Plan validity",
+    "close": "Close"
   }
 }

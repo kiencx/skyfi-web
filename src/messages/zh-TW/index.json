@@ -169,6 +169,17 @@
       "loading": "正在載入號碼...",
       "error": "載入號碼錯誤",
       "noSims": "目前沒有可用號碼"
+    },
+    "haveEsim": {
+      "titlePrefix": "已有",
+      "titleHighlight": "eSIM？",
+      "subtitle": "管理SIM或為既有SIM加購流量",
+      "cta": "進入我的SIM",
+      "benefits": {
+        "secure": "資訊安全",
+        "fastTopup": "快速加購",
+        "trackData": "輕鬆追蹤流量"
+      }
     }
   },
   "countryPlansPage": {
@@ -745,6 +756,67 @@
       "required": "必需",
       "notRequired": "非必需"
     }
+  },
+  "loginSim": {
+    "breadcrumbHome": "首頁",
+    "breadcrumbCurrent": "Login SIM",
+    "titlePrefix": "已有",
+    "titleHighlight": "eSIM？",
+    "subtitle": "存取並管理您的SIM，輕鬆查看流量、有效期並加購方案",
+    "emailTitle": "透過電子郵件存取",
+    "emailDesc": "輸入購買eSIM時使用的電子郵件",
+    "emailPlaceholder": "輸入您的電子郵件",
+    "serialTitle": "透過SIM序號存取",
+    "serialDesc": "輸入紙本或郵件中的SIM序號",
+    "serialPlaceholder": "輸入SIM序號（例如：89860xxxx）",
+    "continue": "繼續",
+    "secureNote": "您的資訊受到嚴格保護"
+  },
+  "manageSim": {
+    "breadcrumbHome": "首頁",
+    "breadcrumbLogin": "Login SIM",
+    "breadcrumbCurrent": "管理SIM",
+    "greeting": "您好，{name}",
+    "subtitle": "以下是您的eSIM資訊",
+    "statusActive": "使用中",
+    "iccidLabel": "ICCID/SIM serial",
+    "copyIccid": "Copy ICCID",
+    "copied": "Copied",
+    "country": "國家",
+    "currentPlan": "目前方案",
+    "activatedAt": "開通日期",
+    "expiresAt": "到期日期",
+    "usageTitle": "流量與剩餘時間",
+    "dataLabel": "剩餘流量",
+    "timeLabel": "剩餘使用時間",
+    "days": "天",
+    "speedRemaining": "高速流量剩餘：{value}",
+    "speedNote": "高速流量用盡後，上網速度將受限。",
+    "buyMoreTitle": "購買更多流量",
+    "buyMoreDesc": "續費或購買額外流量包以繼續使用。",
+    "buyMoreCta": "購買更多流量",
+    "planInfoTitle": "方案資訊",
+    "planCurrent": "目前方案",
+    "planTotal": "總流量",
+    "planDaily": "每日流量",
+    "planCycle": "週期",
+    "planPrice": "價格",
+    "viewPlanDetail": "查看方案詳情",
+    "historyTitle": "交易紀錄",
+    "viewAll": "查看全部",
+    "colDate": "交易日期",
+    "colContent": "內容",
+    "colPlan": "方案",
+    "colAmount": "金額",
+    "colStatus": "狀態",
+    "statusSuccess": "成功",
+    "colDetail": "詳情",
+    "viewDetail": "查看詳情",
+    "txDetailTitle": "交易詳情",
+    "txOrderCode": "訂單編號",
+    "txPaymentMethod": "付款方式",
+    "txDataAdded": "新增流量",
+    "txValidDays": "方案有效期",
+    "close": "關閉"
   }
-
 }

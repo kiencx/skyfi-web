@@ -169,6 +169,17 @@
       "loading": "SIM番号を読み込み中...",
       "error": "SIM番号の読み込みエラー",
       "noSims": "SIM番号がありません"
+    },
+    "haveEsim": {
+      "titlePrefix": "すでに",
+      "titleHighlight": "eSIMをお持ちですか？",
+      "subtitle": "SIMの管理や既存SIMへの追加データ購入ができます",
+      "cta": "SIMにアクセス",
+      "benefits": {
+        "secure": "情報セキュリティ",
+        "fastTopup": "すぐ追加購入",
+        "trackData": "データ使用量を簡単確認"
+      }
     }
   },
   "countryPlansPage": {
@@ -638,7 +649,6 @@
     "noCountryFound": "国が見つかりません",
     "loading": "読み込み中..."
   },
-
   "footer": {
     "description": "SkyFiは、航空、飲食、娯楽、ショッピングなどの便利なサービスに接続する、世界的な高速eSIM（4G、5G）サービスプロバイダーです。",
     "connectWithUs": "私たちとつながる",
@@ -857,6 +867,67 @@
       "required": "必須",
       "notRequired": "不要"
     }
+  },
+  "loginSim": {
+    "breadcrumbHome": "ホーム",
+    "breadcrumbCurrent": "Login SIM",
+    "titlePrefix": "すでに",
+    "titleHighlight": "eSIMをお持ちですか？",
+    "subtitle": "SIMにアクセスしてデータ量・有効期限の確認や追加購入ができます",
+    "emailTitle": "メールでアクセス",
+    "emailDesc": "eSIM購入時に使用したメールを入力",
+    "emailPlaceholder": "メールアドレスを入力",
+    "serialTitle": "SIMシリアルでアクセス",
+    "serialDesc": "用紙またはメール記載のシリアルを入力",
+    "serialPlaceholder": "SIMシリアルを入力（例：89860xxxx）",
+    "continue": "続行",
+    "secureNote": "お客様の情報は厳重に保護されます"
+  },
+  "manageSim": {
+    "breadcrumbHome": "ホーム",
+    "breadcrumbLogin": "Login SIM",
+    "breadcrumbCurrent": "SIM管理",
+    "greeting": "こんにちは、{name}",
+    "subtitle": "以下はお客様のeSIM情報です",
+    "statusActive": "利用中",
+    "iccidLabel": "ICCID/SIM serial",
+    "copyIccid": "ICCIDをコピー",
+    "copied": "コピーしました",
+    "country": "国",
+    "currentPlan": "現在のプラン",
+    "activatedAt": "開通日",
+    "expiresAt": "有効期限",
+    "usageTitle": "データと残り時間",
+    "dataLabel": "残りデータ",
+    "timeLabel": "残り利用期間",
+    "days": "日",
+    "speedRemaining": "高速データ残り: {value}",
+    "speedNote": "高速データがなくなると、通信速度が制限されます。",
+    "buyMoreTitle": "データ追加購入",
+    "buyMoreDesc": "継続利用のため延長または追加データパックを購入できます。",
+    "buyMoreCta": "データ追加購入",
+    "planInfoTitle": "プラン情報",
+    "planCurrent": "現在のプラン",
+    "planTotal": "総データ量",
+    "planDaily": "1日あたり",
+    "planCycle": "サイクル",
+    "planPrice": "料金",
+    "viewPlanDetail": "プラン詳細を見る",
+    "historyTitle": "取引履歴",
+    "viewAll": "すべて見る",
+    "colDate": "取引日",
+    "colContent": "内容",
+    "colPlan": "プラン",
+    "colAmount": "金額",
+    "colStatus": "ステータス",
+    "statusSuccess": "成功",
+    "colDetail": "詳細",
+    "viewDetail": "詳細を見る",
+    "txDetailTitle": "取引詳細",
+    "txOrderCode": "注文コード",
+    "txPaymentMethod": "支払い方法",
+    "txDataAdded": "追加データ",
+    "txValidDays": "プラン有効期間",
+    "close": "閉じる"
   }
-
 }

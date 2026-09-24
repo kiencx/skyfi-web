@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from '../../../i18n/navigation';
 import Footer from '../../components/Footer';
 import Header from '../../components/Header';
+import HaveEsimSection from '../../components/home/HaveEsimSection';
 import useMyEsim from '../../hooks/useMyEsim';
 import HeaderCart from "@/app/components/HeaderCart";
 import {trackProductListView, trackPageView, trackSearch} from "@/app/utils/trackingHelper";
@@ -547,6 +548,8 @@ export default function TravelESimPage() {
             </section>
 
         )}
+
+      {showFigmaMarketing && <HaveEsimSection />}
 
       {/* Main Content Section */}
       <main className="relative z-0 flex flex-col">

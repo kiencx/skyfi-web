@@ -169,6 +169,17 @@
       "loading": "SIM 번호 로딩 중...",
       "error": "SIM 번호 로딩 오류",
       "noSims": "SIM 번호가 없습니다"
+    },
+    "haveEsim": {
+      "titlePrefix": "이미",
+      "titleHighlight": "eSIM이 있으신가요?",
+      "subtitle": "SIM을 관리하거나 기존 SIM에 데이터를 추가하세요",
+      "cta": "내 SIM 바로가기",
+      "benefits": {
+        "secure": "정보 보안",
+        "fastTopup": "빠른 추가 구매",
+        "trackData": "데이터 사용량 쉽게 확인"
+      }
     }
   },
   "countryPlansPage": {
@@ -637,7 +648,6 @@
     "noCountryFound": "국가를 찾을 수 없습니다",
     "loading": "로딩 중..."
   },
-
   "footer": {
     "description": "SkyFi는 항공, 식사, 엔터테인먼트, 쇼핑 등 다양한 편의 시설과 연결되는 글로벌 고속 eSIM(4G, 5G) 서비스 제공업체입니다.",
     "connectWithUs": "저희에게 연락하세요",
@@ -1704,5 +1714,67 @@
       "required": "필수",
       "notRequired": "필수 아님"
     }
+  },
+  "loginSim": {
+    "breadcrumbHome": "홈",
+    "breadcrumbCurrent": "Login SIM",
+    "titlePrefix": "이미",
+    "titleHighlight": "eSIM이 있으신가요?",
+    "subtitle": "SIM에 접속해 데이터, 유효기간을 확인하고 추가 구매하세요",
+    "emailTitle": "이메일로 접속",
+    "emailDesc": "eSIM 구매 시 사용한 이메일을 입력하세요",
+    "emailPlaceholder": "이메일을 입력하세요",
+    "serialTitle": "SIM 일련번호로 접속",
+    "serialDesc": "서류 또는 이메일의 SIM 일련번호를 입력하세요",
+    "serialPlaceholder": "SIM 일련번호 입력 (예: 89860xxxx)",
+    "continue": "계속",
+    "secureNote": "고객 정보는 안전하게 보호됩니다"
+  },
+  "manageSim": {
+    "breadcrumbHome": "홈",
+    "breadcrumbLogin": "Login SIM",
+    "breadcrumbCurrent": "SIM 관리",
+    "greeting": "안녕하세요, {name}",
+    "subtitle": "아래는 고객님의 eSIM 정보입니다",
+    "statusActive": "사용 중",
+    "iccidLabel": "ICCID/SIM serial",
+    "copyIccid": "ICCID 복사",
+    "copied": "복사됨",
+    "country": "국가",
+    "currentPlan": "현재 요금제",
+    "activatedAt": "개통일",
+    "expiresAt": "만료일",
+    "usageTitle": "데이터 및 남은 기간",
+    "dataLabel": "남은 데이터",
+    "timeLabel": "남은 사용 기간",
+    "days": "일",
+    "speedRemaining": "고속 데이터 남음: {value}",
+    "speedNote": "고속 데이터가 소진되면 인터넷 속도가 제한됩니다.",
+    "buyMoreTitle": "데이터 추가 구매",
+    "buyMoreDesc": "계속 사용하려면 연장하거나 데이터 팩을 추가 구매하세요.",
+    "buyMoreCta": "데이터 추가 구매",
+    "planInfoTitle": "요금제 정보",
+    "planCurrent": "현재 요금제",
+    "planTotal": "총 데이터",
+    "planDaily": "일일 데이터",
+    "planCycle": "주기",
+    "planPrice": "가격",
+    "viewPlanDetail": "요금제 자세히 보기",
+    "historyTitle": "거래 내역",
+    "viewAll": "전체 보기",
+    "colDate": "거래일",
+    "colContent": "내용",
+    "colPlan": "요금제",
+    "colAmount": "금액",
+    "colStatus": "상태",
+    "statusSuccess": "성공",
+    "colDetail": "상세",
+    "viewDetail": "상세 보기",
+    "txDetailTitle": "거래 상세",
+    "txOrderCode": "주문 코드",
+    "txPaymentMethod": "결제 수단",
+    "txDataAdded": "추가 데이터",
+    "txValidDays": "요금제 기간",
+    "close": "닫기"
   }
 }

@@ -169,6 +169,17 @@
       "loading": "Загрузка номеров SIM-карт...",
       "error": "Ошибка загрузки номеров SIM-карт",
       "noSims": "Нет доступных номеров SIM-карт"
+    },
+    "haveEsim": {
+      "titlePrefix": "Уже есть",
+      "titleHighlight": "eSIM?",
+      "subtitle": "Управляйте SIM или докувайте трафик для существующей SIM",
+      "cta": "Перейти к вашей SIM",
+      "benefits": {
+        "secure": "Защита данных",
+        "fastTopup": "Быстрая докувка",
+        "trackData": "Легко отслеживать трафик"
+      }
     }
   },
   "countryPlansPage": {
@@ -637,7 +648,6 @@
     "noCountryFound": "Страны не найдены",
     "loading": "Загрузка..."
   },
-
   "footer": {
     "description": "SkyFi — глобальный поставщик высокоскоростных услуг eSIM (4G, 5G), подключающий к таким удобствам, как авиаперелеты, питание, развлечения, покупки и многое другое...",
     "connectWithUs": "СВЯЗАТЬСЯ С НАМИ",
@@ -856,6 +866,67 @@
       "required": "Требуется",
       "notRequired": "Не требуется"
     }
+  },
+  "loginSim": {
+    "breadcrumbHome": "Главная",
+    "breadcrumbCurrent": "Login SIM",
+    "titlePrefix": "Уже есть",
+    "titleHighlight": "eSIM?",
+    "subtitle": "Войдите и управляйте SIM: отслеживайте трафик, срок действия и докупайте пакеты",
+    "emailTitle": "Вход по email",
+    "emailDesc": "Введите email, использованный при покупке eSIM",
+    "emailPlaceholder": "Введите ваш email",
+    "serialTitle": "Вход по серийному номеру SIM",
+    "serialDesc": "Введите серийный номер с бумаги или email",
+    "serialPlaceholder": "Введите серийный номер (напр. 89860xxxx)",
+    "continue": "Продолжить",
+    "secureNote": "Ваши данные надёжно защищены"
+  },
+  "manageSim": {
+    "breadcrumbHome": "Главная",
+    "breadcrumbLogin": "Login SIM",
+    "breadcrumbCurrent": "Управление SIM",
+    "greeting": "Здравствуйте, {name}",
+    "subtitle": "Ниже информация о вашей eSIM",
+    "statusActive": "Активна",
+    "iccidLabel": "ICCID/SIM serial",
+    "copyIccid": "Copy ICCID",
+    "copied": "Copied",
+    "country": "Страна",
+    "currentPlan": "Текущий тариф",
+    "activatedAt": "Дата активации",
+    "expiresAt": "Срок действия",
+    "usageTitle": "Трафик и оставшееся время",
+    "dataLabel": "Остаток данных",
+    "timeLabel": "Оставшееся время",
+    "days": "Дней",
+    "speedRemaining": "Высокая скорость осталось: {value}",
+    "speedNote": "После исчерпания высокоскоростного трафика скорость будет ограничена.",
+    "buyMoreTitle": "Купить ещё трафик",
+    "buyMoreDesc": "Продлите или купите доп. пакеты данных.",
+    "buyMoreCta": "Купить ещё трафик",
+    "planInfoTitle": "Информация о тарифе",
+    "planCurrent": "Текущий тариф",
+    "planTotal": "Всего данных",
+    "planDaily": "Данных/день",
+    "planCycle": "Цикл",
+    "planPrice": "Цена",
+    "viewPlanDetail": "Подробнее о тарифе",
+    "historyTitle": "История операций",
+    "viewAll": "Смотреть все",
+    "colDate": "Дата",
+    "colContent": "Описание",
+    "colPlan": "Тариф",
+    "colAmount": "Сумма",
+    "colStatus": "Статус",
+    "statusSuccess": "Успешно",
+    "colDetail": "Детали",
+    "viewDetail": "Подробнее",
+    "txDetailTitle": "Детали операции",
+    "txOrderCode": "Код заказа",
+    "txPaymentMethod": "Способ оплаты",
+    "txDataAdded": "Добавленные данные",
+    "txValidDays": "Срок тарифа",
+    "close": "Закрыть"
   }
-
 }
