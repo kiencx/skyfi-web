@@ -192,26 +192,29 @@ export default function TravelESimPage() {
     }
 
     let isCurrent = true;
-    const featuredCountries = fetchedData.slice(0, 12);
 
-    const fetchFeaturedPrices = async () => {
-      const pricesFromPublicV2 = featuredCountries
+    // `min_price` is returned with Public v2 regions. Prefer it so the
+    // country list remains entirely on the new API contract.
+    const pricesFromPublicV2 = Object.fromEntries(
+      fetchedData
         .map((country) => {
-          const price = Number(country.min_price);
+          const price = country.min_price === null || country.min_price === undefined
+            ? NaN
+            : Number(country.min_price);
           if (!Number.isFinite(price)) return null;
 
           return [country.id, `${price.toLocaleString('vi-VN')}đ`];
         })
-        .filter(Boolean);
+        .filter(Boolean),
+    );
+    setCountryPrices(pricesFromPublicV2);
 
-      // `min_price` is returned with Public v2 regions. Prefer it so the
-      // country list remains entirely on the new API contract.
-      if (pricesFromPublicV2.length === featuredCountries.length) {
-        if (isCurrent) setCountryPrices(Object.fromEntries(pricesFromPublicV2));
-        return;
-      }
+    const visibleCountries = isShowingAllDestinations ? fetchedData : fetchedData.slice(0, 12);
+    const countriesWithoutPrice = visibleCountries.filter((country) => !pricesFromPublicV2[country.id]);
+    if (countriesWithoutPrice.length === 0) return undefined;
 
-      const prices = await Promise.all(featuredCountries.map(async (country) => {
+    const fetchMissingPrices = async () => {
+      const prices = await Promise.all(countriesWithoutPrice.map(async (country) => {
         try {
           const response = await axios.get(
             `${process.env.NEXT_PUBLIC_API_BASE_URL}/app/v2/get-esim-package-by-region/${country.id}`,
@@ -240,15 +243,18 @@ export default function TravelESimPage() {
       }));
 
       if (isCurrent) {
-        setCountryPrices(Object.fromEntries(prices.filter(([, price]) => price)));
+        setCountryPrices((current) => ({
+          ...current,
+          ...Object.fromEntries(prices.filter(([, price]) => price)),
+        }));
       }
     };
 
-    fetchFeaturedPrices();
+    fetchMissingPrices();
     return () => {
       isCurrent = false;
     };
-  }, [activeTab, fetchedData, locale, showFigmaMarketing]);
+  }, [activeTab, fetchedData, isShowingAllDestinations, locale, showFigmaMarketing]);
 
   // Filter items based on search term for popover
   const filteredData = fetchedData.filter(item =>
