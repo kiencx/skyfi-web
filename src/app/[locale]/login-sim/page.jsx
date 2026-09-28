@@ -1,10 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { toast } from 'react-toastify';
 import { Link, useRouter } from '../../../i18n/navigation';
 import Footer from '../../components/Footer';
 import Header from '../../components/Header';
+import SelfCareService from '../../services/selfCareService';
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const ICCID_PATTERN = /^[0-9]{18,22}$/;
+const OTP_PATTERN = /^[0-9]{6}$/;
+const RESEND_COOLDOWN_MS = 30 * 1000;
+
+const formatCountdown = (ms) => {
+  const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+  const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+  const seconds = String(totalSeconds % 60).padStart(2, '0');
+  return `${minutes}:${seconds}`;
+};
 
 const IconMail = () => (
   <svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -49,11 +63,143 @@ export default function LoginSimPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [simSerial, setSimSerial] = useState('');
+  const [step, setStep] = useState('form');
+  const [pendingToken, setPendingToken] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [otpExpiresAt, setOtpExpiresAt] = useState(0);
+  const [resendAvailableAt, setResendAvailableAt] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSubmit = (event) => {
+  useEffect(() => {
+    if (step !== 'otp') return undefined;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [step]);
+
+  const otpRemainingMs = otpExpiresAt - now;
+  const resendRemainingMs = resendAvailableAt - now;
+  const isOtpExpired = step === 'otp' && otpRemainingMs <= 0;
+  const canResend = resendRemainingMs <= 0 || isOtpExpired;
+
+  const getErrorMessage = (error, context) => {
+    switch (error?.status) {
+      case 400:
+        if (context === 'iccid') return t('errorInvalidSerial');
+        if (context === 'otp') return t('otpWrong');
+        return t('errorInvalidEmail');
+      case 401:
+        return context === 'otp' ? t('otpWrong') : t('errorSystem');
+      case 404:
+        return context === 'iccid' ? t('errorSerialNotFound') : t('errorServiceOff');
+      case 429:
+        return t('errorTooMany');
+      default:
+        return t('errorSystem');
+    }
+  };
+
+  const beginOtpStep = (data) => {
+    const startedAt = Date.now();
+    setPendingToken(data?.pendingToken || '');
+    setOtpExpiresAt(startedAt + (Number(data?.expiresInSeconds) || 300) * 1000);
+    setResendAvailableAt(startedAt + RESEND_COOLDOWN_MS);
+    setNow(startedAt);
+    setOtpCode('');
+    setStep('otp');
+  };
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    // No API yet — go to mock manage-sim screen
-    router.push('/manage-sim');
+    setErrorMessage('');
+
+    const trimmedEmail = email.trim().toLowerCase();
+    const iccid = simSerial.replace(/\s/g, '');
+
+    if (!trimmedEmail && !iccid) {
+      setErrorMessage(t('errorRequired'));
+      return;
+    }
+    if (trimmedEmail && (!EMAIL_PATTERN.test(trimmedEmail) || trimmedEmail.length > 254)) {
+      setErrorMessage(t('errorInvalidEmail'));
+      return;
+    }
+    if (!trimmedEmail && !ICCID_PATTERN.test(iccid)) {
+      setErrorMessage(t('errorInvalidSerial'));
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      if (trimmedEmail) {
+        const data = await SelfCareService.startEmailSession(trimmedEmail);
+        setEmail(trimmedEmail);
+        beginOtpStep(data);
+      } else {
+        await SelfCareService.lookupByIccid(iccid);
+        router.push('/manage-sim');
+      }
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, trimmedEmail ? 'email' : 'iccid'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleVerify = async (event) => {
+    event.preventDefault();
+    setErrorMessage('');
+
+    if (isOtpExpired) {
+      setErrorMessage(t('otpExpired'));
+      return;
+    }
+    if (!OTP_PATTERN.test(otpCode)) {
+      setErrorMessage(t('otpWrong'));
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await SelfCareService.verifyOtp(email, pendingToken, otpCode);
+      router.push('/manage-sim');
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, 'otp'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!canResend || isSubmitting) return;
+    setErrorMessage('');
+    setIsSubmitting(true);
+    try {
+      if (isOtpExpired) {
+        // An expired pending token can no longer be resent, so a fresh session is started instead.
+        beginOtpStep(await SelfCareService.startEmailSession(email));
+      } else {
+        await SelfCareService.resendOtp(email, pendingToken);
+        const resentAt = Date.now();
+        setOtpExpiresAt(resentAt + 300 * 1000);
+        setResendAvailableAt(resentAt + RESEND_COOLDOWN_MS);
+        setNow(resentAt);
+        setOtpCode('');
+      }
+      toast.success(t('otpResent'));
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error, 'email'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleChangeEmail = () => {
+    setStep('form');
+    setPendingToken('');
+    setOtpCode('');
+    setErrorMessage('');
   };
 
   return (
@@ -86,8 +232,10 @@ export default function LoginSimPage() {
             </div>
 
             {/* Right form — row 2 on small, right column on L+ */}
+            {step === 'form' ? (
             <form
               onSubmit={handleSubmit}
+              noValidate
               className="flex w-full max-w-[490px] flex-col gap-4 sm:gap-5 lg:shrink-0"
             >
               <h1 className="font-inter text-[32px] font-bold leading-tight text-[#333] sm:text-[40px] lg:text-[48px] lg:leading-[48px]">
@@ -115,8 +263,10 @@ export default function LoginSimPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={t('emailPlaceholder')}
+                  autoComplete="email"
                   className="w-full rounded-lg border border-[#EAEAEA] px-4 py-3.5 font-inter text-base font-medium text-[#181818] outline-none placeholder:opacity-50 focus:border-[#FAA61A]"
                 />
+                <p className="font-inter text-xs leading-[18px] text-[#666] sm:text-sm">{t('emailHint')}</p>
               </div>
 
               <div className="flex w-full flex-col gap-2.5 rounded-[14px] border border-[#EAEAEA] bg-white p-4 sm:p-5">
@@ -133,6 +283,7 @@ export default function LoginSimPage() {
                 </div>
                 <input
                   type="text"
+                  inputMode="numeric"
                   value={simSerial}
                   onChange={(e) => setSimSerial(e.target.value)}
                   placeholder={t('serialPlaceholder')}
@@ -140,11 +291,16 @@ export default function LoginSimPage() {
                 />
               </div>
 
+              {errorMessage && (
+                <p role="alert" className="font-inter text-sm text-[#ED1B2F]">{errorMessage}</p>
+              )}
+
               <button
                 type="submit"
-                className="w-full rounded-lg bg-[#FAA61A] px-6 py-4 font-inter text-base font-semibold text-white transition-opacity hover:opacity-90"
+                disabled={isSubmitting}
+                className="w-full rounded-lg bg-[#FAA61A] px-6 py-4 font-inter text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {t('continue')}
+                {isSubmitting ? t('processing') : t('continue')}
               </button>
 
               <div className="flex items-center justify-center gap-1">
@@ -154,6 +310,70 @@ export default function LoginSimPage() {
                 </p>
               </div>
             </form>
+            ) : (
+            <form
+              onSubmit={handleVerify}
+              noValidate
+              className="flex w-full max-w-[490px] flex-col gap-4 sm:gap-5 lg:shrink-0"
+            >
+              <h1 className="font-inter text-[32px] font-bold leading-tight text-[#333] sm:text-[40px]">
+                {t('otpTitle')}
+              </h1>
+              <p className="font-inter text-sm leading-[19px] text-black sm:text-base">
+                {t('otpSentTo', { email: SelfCareService.maskEmail(email) })}
+              </p>
+
+              <div className="flex w-full flex-col gap-2.5 rounded-[14px] border border-[#EAEAEA] bg-white p-4 sm:p-5">
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  autoFocus
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder={t('otpPlaceholder')}
+                  className="w-full rounded-lg border border-[#EAEAEA] px-4 py-3.5 text-center font-inter text-2xl font-semibold tracking-[0.5em] text-[#181818] outline-none placeholder:text-base placeholder:tracking-normal placeholder:opacity-50 focus:border-[#FAA61A]"
+                />
+                <div className="flex items-center justify-between gap-3 font-inter text-sm">
+                  <span className={isOtpExpired ? 'text-[#ED1B2F]' : 'text-[#666]'}>
+                    {isOtpExpired ? t('otpExpired') : t('otpExpiresIn', { time: formatCountdown(otpRemainingMs) })}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={!canResend || isSubmitting}
+                    className="shrink-0 font-semibold text-[#EC242A] disabled:cursor-not-allowed disabled:text-[#999]"
+                  >
+                    {canResend
+                      ? t('otpResend')
+                      : t('otpResendIn', { seconds: Math.ceil(resendRemainingMs / 1000) })}
+                  </button>
+                </div>
+              </div>
+
+              {errorMessage && (
+                <p role="alert" className="font-inter text-sm text-[#ED1B2F]">{errorMessage}</p>
+              )}
+
+              <button
+                type="submit"
+                disabled={isSubmitting || otpCode.length < 6 || isOtpExpired}
+                className="w-full rounded-lg bg-[#FAA61A] px-6 py-4 font-inter text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSubmitting ? t('processing') : t('otpConfirm')}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleChangeEmail}
+                className="self-center font-inter text-sm font-semibold text-[#333] underline underline-offset-2 hover:text-[#EC242A]"
+              >
+                {t('otpChangeEmail')}
+              </button>
+            </form>
+            )}
           </div>
         </div>
       </main>
