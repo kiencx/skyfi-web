@@ -11,36 +11,29 @@ const formatPrice = (value, currency = 'VND', locale = 'vi') => new Intl.NumberF
   maximumFractionDigits: currency === 'VND' ? 0 : 2,
 }).format(Number(value || 0));
 
-const normalizeBackendOption = (option) => {
-  if (option && typeof option === 'object') {
-    const amount = option.data_amount ?? option.amount ?? option.value ?? option.data;
-    const unit = option.data_unit ?? option.unit ?? '';
-    if (amount != null) {
-      return {
-        key: `${amount}-${unit}`.toUpperCase(),
-        label: Number(amount) === 0 ? 'Unlimited' : `${amount}${unit ? ` ${unit}` : ''}`,
-      };
-    }
-  }
-  const value = String(option || '').trim();
-  if (!value) return null;
-  return /unlimited/i.test(value)
-    ? { key: 'UNLIMITED', label: 'Không giới hạn' }
-    : { key: value.toUpperCase().replace(/\s+/g, '-'), label: value };
+// data_amount = 0 means unlimited data.
+const getDataOption = (pkg) => {
+  const amount = Number(pkg?.data_amount);
+  if (pkg?.data_amount == null || !Number.isFinite(amount)) return null;
+  const unit = String(pkg.data_unit || '').toUpperCase();
+  return {
+    key: `${amount}-${unit}`,
+    label: amount === 0 ? 'Unlimited' : `${amount}${unit ? ` ${unit}` : ''}`,
+    sortValue: unit === 'GB' ? amount * 1024 : amount,
+  };
 };
 
-const orderDataOptions = (options) => [...options].sort((left, right) => {
-  if (left.key === 'UNLIMITED') return 1;
-  if (right.key === 'UNLIMITED') return -1;
-  return Number.parseFloat(left.key) - Number.parseFloat(right.key);
-});
+const getValidityDays = (pkg) => {
+  const days = Number(pkg?.validity_days);
+  return Number.isFinite(days) ? days : null;
+};
 
 const getCountryFlagUrl = (country) => {
   const isoCode = String(country.iso_code || country.code || '').trim().toLowerCase();
   return isoCode ? `https://flagcdn.com/w160/${isoCode}.png` : null;
 };
 
-export default function BssPackageSelector({ country, dataOptions, validityDaysOptions, locale, onBuyNow, onFilterPackages }) {
+export default function BssPackageSelector({ country, packages, locale, onBuyNow }) {
   const [selectedDataKey, setSelectedDataKey] = useState('');
   const [selectedDays, setSelectedDays] = useState('');
   const [selectedPackageId, setSelectedPackageId] = useState('');
@@ -48,18 +41,28 @@ export default function BssPackageSelector({ country, dataOptions, validityDaysO
   const [price, setPrice] = useState(null);
   const [priceError, setPriceError] = useState('');
   const [isLoadingPrice, setIsLoadingPrice] = useState(false);
-  const [suggestedPackages, setSuggestedPackages] = useState([]);
-  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
-  const [suggestionsError, setSuggestionsError] = useState('');
 
   const dataChoices = useMemo(() => {
-    const byKey = new Map(dataOptions.map(normalizeBackendOption).filter(Boolean).map((option) => [option.key, option]));
-    return orderDataOptions([...byKey.values()]);
-  }, [dataOptions]);
+    const byKey = new Map(packages.map(getDataOption).filter(Boolean).map((option) => [option.key, option]));
+    return [...byKey.values()].sort((left, right) => left.sortValue - right.sortValue);
+  }, [packages]);
 
   const validityChoices = useMemo(() => {
-    return [...new Set(validityDaysOptions.map(Number).filter(Number.isFinite))].sort((left, right) => left - right);
-  }, [validityDaysOptions]);
+    return [...new Set(packages.map(getValidityDays).filter((days) => days !== null))].sort((left, right) => left - right);
+  }, [packages]);
+
+  // Only validity days that have a package for the selected data amount can be picked.
+  const availableDays = useMemo(() => new Set(
+    packages
+      .filter((pkg) => getDataOption(pkg)?.key === selectedDataKey)
+      .map(getValidityDays)
+      .filter((days) => days !== null),
+  ), [packages, selectedDataKey]);
+
+  const suggestedPackages = useMemo(() => packages.filter((pkg) => (
+    getDataOption(pkg)?.key === selectedDataKey && String(getValidityDays(pkg)) === selectedDays
+  )), [packages, selectedDataKey, selectedDays]);
+
   const selectedPackage = useMemo(
     () => suggestedPackages.find((pkg) => String(pkg.package_id) === String(selectedPackageId)) || null,
     [suggestedPackages, selectedPackageId],
@@ -72,41 +75,16 @@ export default function BssPackageSelector({ country, dataOptions, validityDaysO
   }, [dataChoices, selectedDataKey]);
 
   useEffect(() => {
-    if (!selectedDays && validityChoices.length) {
-      setSelectedDays(String(validityChoices[0]));
+    if (!availableDays.has(Number(selectedDays))) {
+      const firstAvailable = validityChoices.find((days) => availableDays.has(days));
+      setSelectedDays(firstAvailable === undefined ? '' : String(firstAvailable));
     }
-  }, [selectedDays, validityChoices]);
+  }, [availableDays, selectedDays, validityChoices]);
 
   useEffect(() => {
     setSelectedPackageId('');
     setQuantity(1);
   }, [selectedDataKey, selectedDays]);
-
-  useEffect(() => {
-    if (!selectedDataKey || !selectedDays) {
-      setSuggestedPackages([]);
-      setSuggestionsError('');
-      return undefined;
-    }
-
-    let current = true;
-    setIsLoadingSuggestions(true);
-    setSuggestionsError('');
-    onFilterPackages(selectedDataKey, Number(selectedDays))
-      .then((responsePackages) => {
-        if (!current) return;
-        setSuggestedPackages(responsePackages);
-      })
-      .catch((error) => {
-        if (!current) return;
-        setSuggestionsError(error.response?.data?.message || error.message || 'Không thể tải gói phù hợp.');
-        setSuggestedPackages([]);
-      })
-      .finally(() => {
-        if (current) setIsLoadingSuggestions(false);
-      });
-    return () => { current = false; };
-  }, [onFilterPackages, selectedDataKey, selectedDays]);
 
   useEffect(() => {
     if (!selectedPackage || !Number.isInteger(quantity) || quantity < 1) {
@@ -201,11 +179,14 @@ export default function BssPackageSelector({ country, dataOptions, validityDaysO
                 <button
                   key={days}
                   type="button"
+                  disabled={!availableDays.has(days)}
                   onClick={() => setSelectedDays(String(days))}
                   className={`min-w-14 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors ${
                     selectedDays === String(days)
                       ? 'border-[#faa61a] bg-[#faa61a] text-white'
-                      : 'border-[#e0e0e0] bg-white text-[#333] hover:border-[#faa61a]'
+                      : availableDays.has(days)
+                        ? 'border-[#e0e0e0] bg-white text-[#333] hover:border-[#faa61a]'
+                        : 'cursor-not-allowed border-[#eeeeee] bg-[#f5f5f5] text-[#c4c4c4]'
                   }`}
                 >
                   {days} ngày
@@ -219,10 +200,6 @@ export default function BssPackageSelector({ country, dataOptions, validityDaysO
             <h3 className="text-base font-bold text-[#333]">Gợi ý gói eSIM</h3>
             {!selectedDataKey || !selectedDays ? (
               <p className="mt-3 text-sm text-[#777]">Đang chọn dung lượng và ngày sử dụng mặc định.</p>
-            ) : isLoadingSuggestions ? (
-              <p className="mt-3 text-sm text-[#777]">Đang tìm gói phù hợp...</p>
-            ) : suggestionsError ? (
-              <p className="mt-3 text-sm text-red-600">{suggestionsError}</p>
             ) : suggestedPackages.length ? (
               <div className="mt-3 grid max-h-[420px] gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
                 {suggestedPackages.map((pkg) => {

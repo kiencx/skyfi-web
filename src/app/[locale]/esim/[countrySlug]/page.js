@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Footer from '../../../components/Footer';
 import Header from '../../../components/Header';
 import BssPackageSelector from '../../../components/BssPackageSelector';
@@ -83,8 +83,7 @@ export default function CountryESimPlansPage() {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilterPopover, setShowFilterPopover] = useState(false);
-  const [dataOptions, setDataOptions] = useState([]);
-  const [validityDaysOptions, setValidityDaysOptions] = useState([]);
+  const [packages, setPackages] = useState([]);
   const searchInputRef = useRef(null);
   const popoverRef = useRef(null);
 
@@ -113,30 +112,6 @@ export default function CountryESimPlansPage() {
 
     const { showDevicesEsim } = useMyEsim();
 
-  const filterPackagesBySelection = useCallback(async (dataKey, validityDays) => {
-    if (!countryDetails) return [];
-
-    const packageQuery = new URLSearchParams({
-      limit: '50',
-      page: '1',
-      package_type: 'NEW_ESIM',
-      min_validity_days: String(validityDays),
-      max_validity_days: String(validityDays),
-    });
-    packageQuery.set('region_id', String(countryDetails.id));
-
-    const numericData = String(dataKey).match(/^(\d+(?:\.\d+)?)-(GB|MB)$/i);
-    if (numericData) {
-      const [, amount, unit] = numericData;
-      packageQuery.set('min_data', amount);
-      packageQuery.set('max_data', amount);
-      packageQuery.set('data_unit', unit.toUpperCase());
-    }
-
-    const packageItems = await fetchAllBssPackagePages(packageQuery);
-    return packageItems.map((pkg) => adaptPublicV2Package(pkg, countryDetails));
-  }, [countryDetails]);
-
   useEffect(() => {
     trackPageView({ page_title: `eSIM ${countrySlug} - Chọn gói cước` });
   }, [countrySlug]);
@@ -158,6 +133,7 @@ export default function CountryESimPlansPage() {
       setIsLoading(true);
       setError(null);
       setCountryDetails(null);
+      setPackages([]);
 
       try {
         // 1. Fetch the selected country, region, or global destination through
@@ -181,22 +157,16 @@ export default function CountryESimPlansPage() {
           // Use tPage for specific error messages
           throw new Error(tPage('countryNotFound', { slug: countrySlug }));
         }
+        // Load every package once; the selector derives the valid
+        // data/validity combinations from this list.
+        const packageItems = await fetchAllBssPackagePages(new URLSearchParams({
+          limit: '50',
+          page: '1',
+          package_type: 'NEW_ESIM',
+          region_id: String(foundCountry.id),
+        }));
+        setPackages(packageItems.map((pkg) => adaptPublicV2Package(pkg, foundCountry)));
         setCountryDetails(foundCountry);
-
-        const [dataOptionsResult, validityDaysResult] = await Promise.allSettled([
-          axios.get(`/api/bss/packages/data-options?region_id=${foundCountry.id}`),
-          axios.get(`/api/bss/packages/validity-days?region_id=${foundCountry.id}`),
-        ]);
-        const nextDataOptions =
-          dataOptionsResult.status === 'fulfilled' && Array.isArray(dataOptionsResult.value.data?.data)
-            ? dataOptionsResult.value.data.data
-            : [];
-        const nextValidityDaysOptions =
-          validityDaysResult.status === 'fulfilled' && Array.isArray(validityDaysResult.value.data?.data)
-            ? validityDaysResult.value.data.data
-            : [];
-        setDataOptions(nextDataOptions);
-        setValidityDaysOptions(nextValidityDaysOptions);
 
       } catch (err) {
         console.error("Lỗi khi tải dữ liệu eSIM quốc gia cho slug:", countrySlug, err);
@@ -505,11 +475,9 @@ export default function CountryESimPlansPage() {
           {!isLoading && !error && countryDetails && (
             <BssPackageSelector
               country={countryDetails}
-              dataOptions={dataOptions}
-              validityDaysOptions={validityDaysOptions}
+              packages={packages}
               locale={locale}
               onBuyNow={onBuyNowClick}
-              onFilterPackages={filterPackagesBySelection}
             />
           )}
         </div>
