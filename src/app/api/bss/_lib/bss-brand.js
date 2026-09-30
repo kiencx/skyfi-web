@@ -10,11 +10,6 @@ const BRAND_CONFIG = {
     source: 'vietnam-homepage',
     touchpoint: 'WEB_PORTAL',
   }),
-  agency: () => ({
-    channel: process.env.BSS_CHANNEL_AGENCY || defaultChannel(),
-    source: process.env.BSS_SOURCE_AGENCY || 'agency-esim',
-    touchpoint: 'WEB_PORTAL',
-  }),
   vikki: () => ({
     channel: process.env.BSS_CHANNEL_VIKKI || defaultChannel(),
     source: process.env.BSS_SOURCE_VIKKI || 'vikki-app',

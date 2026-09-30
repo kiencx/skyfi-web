@@ -5,7 +5,6 @@ import axios from 'axios';
 
 export const BSS_BRANDS = {
   WEB: 'web',
-  AGENCY: 'agency',
   VIKKI: 'vikki',
 };
 

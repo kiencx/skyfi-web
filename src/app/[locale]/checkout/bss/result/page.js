@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import Footer from '../../../../components/Footer';
 import Header from '../../../../components/Header';
-import { BSS_BRANDS, BSS_LAST_BRAND_KEY, BSS_LAST_ORDER_KEY, normalizeBrand } from '@/app/utils/bssCatalog';
 
 export default function BssOrderResultPage() {
   const locale = useLocale();
@@ -16,18 +15,9 @@ export default function BssOrderResultPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const orderNumber = searchParams.get('orderNumber') || searchParams.get('order_number');
-  const [brand, setBrand] = useState(normalizeBrand(searchParams.get('brand')));
-
-  useEffect(() => {
-    // The GalaxyPay return URL may not carry the brand; fall back to the value
-    // saved when the order was created.
-    if (!searchParams.get('brand')) {
-      setBrand(normalizeBrand(window.sessionStorage.getItem(BSS_LAST_BRAND_KEY)));
-    }
-  }, [searchParams]);
 
   const loadOrder = useCallback(async () => {
-    const orderCode = orderNumber || window.sessionStorage.getItem(BSS_LAST_ORDER_KEY);
+    const orderCode = orderNumber || window.sessionStorage.getItem('bssLastOrderNumber');
     if (!orderCode) {
       setError('Không tìm thấy mã đơn hàng.');
       setIsLoading(false);
@@ -48,7 +38,6 @@ export default function BssOrderResultPage() {
 
   useEffect(() => { loadOrder(); }, [loadOrder]);
 
-  const buyMorePath = brand === BSS_BRANDS.AGENCY ? 'agency-esim' : 'travel-esim';
   const isPaid = ['PAID', 'COMPLETED'].includes(order?.status);
   return (
     <div className="flex min-h-screen flex-col bg-[#f7f7f7]">
@@ -66,7 +55,7 @@ export default function BssOrderResultPage() {
           </div>}
           <div className="mt-7 flex justify-center gap-3">
             <button type="button" onClick={loadOrder} className="rounded-lg border border-[#ed1b2f] px-4 py-2 font-medium text-[#ed1b2f]">Kiểm tra lại</button>
-            <button type="button" onClick={() => router.push(`/${locale}/${buyMorePath}`)} className="rounded-lg bg-[#ed1b2f] px-4 py-2 font-medium text-white">Mua eSIM khác</button>
+            <button type="button" onClick={() => router.push(`/${locale}/travel-esim`)} className="rounded-lg bg-[#ed1b2f] px-4 py-2 font-medium text-white">Mua eSIM khác</button>
           </div>
         </div>
       </main>

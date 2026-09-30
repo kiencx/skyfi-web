@@ -9,7 +9,6 @@ import Header from '../../components/Header';
 import useMyEsim from '../../hooks/useMyEsim';
 import HeaderCart from "@/app/components/HeaderCart";
 import { getRegionsByType, mapTabToApiType } from './service';
-import { getRegionFlagUrl } from '@/app/utils/bssCatalog';
 
 
 const SearchIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
@@ -131,7 +130,7 @@ export default function TravelESimPage() {
               {type === 'COUNTRY' && item.code && (
                 <div className="w-[40px] h-[30.5px] relative flex-shrink-0">
                   <img
-                    src={getRegionFlagUrl(item) ?? `/assets/flags/${item.code.toLowerCase()}.png`}
+                    src={item.icon?? `/assets/flags/${item.code.toLowerCase()}.png`}
                     alt={ item.name }
                     className="rounded-[4px] border object-cover border-[#F1F1F1] w-full h-full"
                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
@@ -167,7 +166,7 @@ export default function TravelESimPage() {
               {type === 'COUNTRY' && item.code && (
                 <div className="w-[40px] h-[30.5px] relative flex-shrink-0">
                   <img
-                    src={getRegionFlagUrl(item) ?? `/assets/flags/${item.code.toLowerCase()}.png`}
+                    src={item.icon?? `/assets/flags/${item.code.toLowerCase()}.png`}
                     alt={ item.name }
                     layout="fill"
                     className="rounded-[4px] border object-cover border-[#F1F1F1] w-full h-full"
@@ -195,7 +194,7 @@ export default function TravelESimPage() {
     currentDataType = 'COUNTRY';
   } else if (activeTab === 'regional') {
     currentTitleKey = 'regionalTitle'; // Assuming 'regionalTitle' key
-    currentDataType = 'REGION';
+    currentDataType = 'REGIONAL';
   } else if (activeTab === 'global') {
     currentTitleKey = 'globalTitle'; // Assuming 'globalTitle' key
     currentDataType = 'GLOBAL';
@@ -266,7 +265,7 @@ export default function TravelESimPage() {
             ].map(tab => (
               <Link
                 key={tab.id}
-                href={`/agency-esim?type=${tab.id}&src=${viewSrc}`}
+                href={tab.id !== 'global' ? `/travel-esim?type=${tab.id}&src=${viewSrc}` : `/esim/global?regions=GLOBAL&src=${viewSrc}`}
                 className={`py-[16px] md:py-[20px] font-inter text-sm sm:text-[16px] md:text-[18px] border-b-2 hover:text-[#ED1B2F]
                   ${activeTab === tab.id
                     ? 'border-[#ED1B2F] text-[#ED1B2F] font-semibold'

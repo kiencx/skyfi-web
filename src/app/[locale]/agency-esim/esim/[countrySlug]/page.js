@@ -1,55 +1,41 @@
 "use client";
 
+import axios from 'axios';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import Footer from '@/app/components/Footer';
 import Header from '@/app/components/Header';
-import HeaderCart from '@/app/components/HeaderCart';
-import BssPackageSelector from '@/app/components/BssPackageSelector';
-import useMyEsim from '@/app/hooks/useMyEsim';
-import { trackBeginCheckout, trackPageView } from '@/app/utils/trackingHelper';
-import {
-  BSS_BRANDS,
-  adaptPublicV2Package,
-  fetchAllBssPackages,
-  fetchBssRegions,
-  getRegionFlagUrl,
-  getRegionSlug,
-  getRequestErrorMessage,
-  mapRegionTypeToTab,
-  normalizeRegionType,
-  saveBssCheckoutItem,
-} from '@/app/utils/bssCatalog';
+import { showModalMess } from '@/app/components/modals/modalMess';
+import PlanCard from '@/app/components/PlanCard';
+import { useUserActions } from '@/app/stores/user';
+import { convertSimTravel, convertSimTravelToCart, dailySuffix } from '@/app/utils/format';
+import HeaderVJ from "@/app/components/HeaderVJ";
+import HeaderCart from "@/app/components/HeaderCart";
+import useMyEsim from "@/app/hooks/useMyEsim";
 
-const BRAND = BSS_BRANDS.AGENCY;
-
+// Placeholder Icons
 const SearchIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
 const ChevronLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>;
 const ArrowRightIcon = () => <svg width="24" height="25" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path fillRule="evenodd" clipRule="evenodd" d="M8.29289 6.05559C8.68342 5.66507 9.31658 5.66507 9.70711 6.05559L15.7071 12.0556C16.0976 12.4461 16.0976 13.0793 15.7071 13.4698L9.70711 19.4698C9.31658 19.8603 8.68342 19.8603 8.29289 19.4698C7.90237 19.0793 7.90237 18.4461 8.29289 18.0556L13.5858 12.7627L8.29289 7.46981C7.90237 7.07928 7.90237 6.44612 8.29289 6.05559Z" fill="#333333"/>
 </svg>;
 
-export default function AgencyCountryESimPlansPage() {
+export default function CountryESimPlansPage() {
   const locale = useLocale();
   const t = useTranslations();
   const params = useParams();
-  const countrySlug = String(params.countrySlug || '');
+  const countrySlug = params.countrySlug;
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const viewSrc = searchParams.get('src') || 'skyfi';
+  const typeParam = searchParams.get( 'type' ) || 'national';
+  const viewSrc = searchParams.get( 'src' ) || 'skyfi';
 
-  // `regions` is written by the list page (COUNTRY | REGION | GLOBAL); fall back
-  // to the tab param so hand-typed URLs still resolve.
-  const regionType = normalizeRegionType(searchParams.get('regions'))
-    || normalizeRegionType({ national: 'COUNTRY', regional: 'REGION', global: 'GLOBAL' }[searchParams.get('type')])
-    || 'COUNTRY';
-  const activeTab = mapRegionTypeToTab(regionType);
+  const regions = searchParams.get( 'regions' );
 
-  const [regionDetails, setRegionDetails] = useState(null);
-  const [allRegions, setAllRegions] = useState([]);
-  const [packages, setPackages] = useState([]);
+  const [countryDetails, setCountryDetails] = useState(null);
+  const [esimPackages, setEsimPackages] = useState([]);
+  const [allCountries, setAllCountries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -57,173 +43,222 @@ export default function AgencyCountryESimPlansPage() {
   const searchInputRef = useRef(null);
   const popoverRef = useRef(null);
 
+  const [ activeTab, setActiveTab ] = useState( typeParam );
+  const router = useRouter();
+
   const tPage = useTranslations('countryEsimPage');
-  const tCommon = useTranslations('common');
+  const tCommon = useTranslations( 'common' );
   const tbaner = useTranslations('travelESimPage');
-  const { showDevicesEsim } = useMyEsim();
+
+    const { showDevicesEsim } = useMyEsim();
+  const {addToCart, setSims}= useUserActions()
 
   useEffect(() => {
-    trackPageView({ page_title: `Agency eSIM ${countrySlug} - Chọn gói cước` });
-  }, [countrySlug]);
+    // Update activeTab when URL query parameter changes
+    setActiveTab(typeParam);
+    setSearchTerm(''); // Clear search when switching tabs
+    setShowFilterPopover(false); // Close popover when switching tabs
+  }, [typeParam]);
 
   useEffect(() => {
-    setSearchTerm('');
-    setShowFilterPopover(false);
-  }, [regionType]);
+    if (!countrySlug || activeTab !== 'national') {
+      // Only fetch if we have a slug and the national tab is active
+      // For regional/global, data comes from the main travel-esim page or another source
+      if (activeTab !== 'national') {
+        setEsimPackages([]); // Clear packages if not on national tab
+        setCountryDetails(null);
+        setIsLoading(false);
+      }
+      return;
+    }
 
-  useEffect(() => {
-    if (!countrySlug) return undefined;
-
-    let isCurrent = true;
-    const load = async () => {
+    const fetchCountryAndPackages = async () => {
       setIsLoading(true);
       setError(null);
-      setRegionDetails(null);
-      setPackages([]);
+      setCountryDetails(null);
+      setEsimPackages([]);
 
       try {
-        const regions = await fetchBssRegions({ type: regionType, brand: BRAND });
-        if (!isCurrent) return;
-        setAllRegions(regions);
+        // 1. Fetch all countries to find the ID and details
+        const countriesApiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/app/get-regions-by-type/v2/${regions}`;
+        const countriesResponse = await axios.get( countriesApiUrl );
 
-        const found = regions.find((region) => getRegionSlug(region) === countrySlug.toLowerCase());
-        if (!found) {
+        let foundCountry = null;
+        if (countriesResponse.data && countriesResponse.data.code === 200 && Array.isArray(countriesResponse.data.result)) {
+          // Store all countries for search filter
+          setAllCountries(countriesResponse.data.result);
+
+          foundCountry = countriesResponse.data.result.find(
+            (country) => country.code && country.code.toLowerCase() === countrySlug.toLowerCase()
+          );
+        } else {
+          throw new Error(countriesResponse.data.message || 'Không thể tải danh sách quốc gia hoặc định dạng không hợp lệ');
+        }
+        console.log("Quốc gia tìm thấy:", foundCountry);
+
+        if (!foundCountry) {
+          // Use tPage for specific error messages
           throw new Error(tPage('countryNotFound', { slug: countrySlug }));
         }
+        setCountryDetails(foundCountry);
 
-        // Load every package once; the selector derives valid data/validity
-        // combinations from this list.
-        const items = await fetchAllBssPackages({ regionId: found.id, brand: BRAND });
-        if (!isCurrent) return;
-        setPackages(items.map((pkg) => adaptPublicV2Package(pkg, found)));
-        setRegionDetails(found);
+        // 2. Fetch eSIM packages for the found country ID
+        const packagesApiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/app/v2/get-esim-package-by-region/${foundCountry.id}`;
+        const packagesResponse = await axios.get(packagesApiUrl);
+
+        if (packagesResponse.data && packagesResponse.data.code === 200 && Array.isArray(packagesResponse.data.result)) {
+          setEsimPackages(packagesResponse.data.result);
+        } else if (packagesResponse.data && packagesResponse.data.code !== 200) {
+           throw new Error(packagesResponse.data.message || `Lỗi khi tải gói: Mã ${packagesResponse.data.code}`);
+        } else {
+          console.warn('Không tìm thấy gói hoặc cấu trúc phản hồi API gói không mong đợi:', packagesResponse.data);
+          setEsimPackages([]);
+        }
+
       } catch (err) {
-        if (!isCurrent) return;
-        console.error('Lỗi khi tải dữ liệu eSIM cho slug:', countrySlug, err);
-        setError(getRequestErrorMessage(err, tCommon('errorFetchingData')));
+        console.error("Lỗi khi tải dữ liệu eSIM quốc gia cho slug:", countrySlug, err);
+        // Use tCommon for generic error messages
+        setError(err.message || tCommon('errorFetchingData'));
       } finally {
-        if (isCurrent) setIsLoading(false);
+        setIsLoading(false);
       }
     };
 
-    load();
-    return () => { isCurrent = false; };
-  }, [countrySlug, regionType, tPage, tCommon]);
+    fetchCountryAndPackages();
+  // Depend on countrySlug and activeTab. Add tPage, tCommon if their instances change.
+  }, [countrySlug, activeTab, locale, tPage, tCommon]);
 
-  const filteredRegions = allRegions.filter((region) => (
-    region.name.toLowerCase().includes(searchTerm.toLowerCase())
-    && getRegionSlug(region) !== countrySlug.toLowerCase()
-  ));
+  // Filter countries based on search term for popover
+  const filteredCountries = allCountries.filter(country =>
+    country.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    country.code.toLowerCase() !== countrySlug.toLowerCase() // Exclude current country
+  );
 
+  // Handle click outside popover to close it
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (popoverRef.current && !popoverRef.current.contains(event.target)
-        && searchInputRef.current && !searchInputRef.current.contains(event.target)) {
+      if (popoverRef.current && !popoverRef.current.contains(event.target) &&
+          searchInputRef.current && !searchInputRef.current.contains(event.target)) {
         setShowFilterPopover(false);
       }
     };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const handleSearchInputFocus = () => {
-    if (allRegions.length > 0) setShowFilterPopover(true);
+    if (allCountries.length > 0) {
+      setShowFilterPopover(true);
+    }
   };
 
-  const handleSearchInputChange = (event) => {
-    setSearchTerm(event.target.value);
-    if (allRegions.length > 0) setShowFilterPopover(true);
+  const handleSearchInputChange = (e) => {
+    setSearchTerm(e.target.value);
+    if (allCountries.length > 0) {
+      setShowFilterPopover(true);
+    }
   };
 
-  const handlePopoverItemClick = () => {
+  const handlePopoverItemClick = (country) => {
     setShowFilterPopover(false);
     setSearchTerm('');
   };
 
-  const renderPopoverItems = (regions) => {
+  const renderPopoverItems = (countries) => {
     if (isLoading) {
       return <div className="text-center py-[20px] text-[#666]">{tPage('loading')}</div>;
     }
 
-    if (!regions || regions.length === 0) {
-      if (searchTerm && allRegions.length > 0) {
+    if (!countries || countries.length === 0) {
+      if (searchTerm && allCountries.length > 0) {
         return (
-          <div className="text-center py-[20px] text-[#666]">
-            <p>{tPage('noResultFor', { searchTerm })}</p>
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                setShowFilterPopover(false);
-              }}
-              className="mt-2 text-blue-600 hover:underline"
-            >
-              {tPage('clearSearch')}
-            </button>
-          </div>
+            <div className="text-center py-[20px] text-[#666]">
+              <p>{tPage('noResultFor', {searchTerm})}</p>
+              <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setShowFilterPopover(false);
+                  }}
+                  className="mt-2 text-blue-600 hover:underline"
+              >
+                {tPage('clearSearch')}
+              </button>
+            </div>
         );
       }
       return <div className="text-center py-[20px] text-[#666]">{tPage('noCountryFound')}</div>;
     }
-
     return (
       <div className="max-h-[400px] overflow-y-auto">
-        {regions.map((region) => {
-          const flagUrl = getRegionFlagUrl(region);
-          return (
-            <Link
-              key={region.id}
-              href={`/${locale}/agency-esim/esim/${getRegionSlug(region)}?regions=${regionType}&src=${viewSrc}`}
-              className="block"
-              onClick={handlePopoverItemClick}
-            >
-              <div className="bg-white hover:bg-gray-50 transition-colors duration-200 flex flex-row items-center p-[12px] gap-[12px] border-b border-[#F1F1F1] last:border-b-0">
-                {flagUrl && (
-                  <div className="w-[40px] h-[30.5px] relative flex-shrink-0">
-                    <img
-                      src={flagUrl}
-                      alt={region.name}
-                      className="rounded-[4px] border object-cover border-[#F1F1F1] w-full h-full"
-                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                    />
-                  </div>
-                )}
-                <span className="font-inter font-semibold text-[16px] text-[#333] flex-1 min-w-0 line-clamp-1">
-                  {region.name}
-                </span>
-                <span className="text-[#A1A1A1]"><ArrowRightIcon /></span>
-              </div>
-            </Link>
-          );
-        })}
+        {countries.map(country => (
+          <Link
+            key={country.id}
+            href={`/agency-esim/esim/${country.code.toLowerCase()}?regions=${regions}&src=${viewSrc}`}
+            className="block"
+            onClick={() => handlePopoverItemClick(country)}
+          >
+            <div className="bg-white hover:bg-gray-50 transition-colors duration-200 flex flex-row items-center p-[12px] gap-[12px] border-b border-[#F1F1F1] last:border-b-0">
+              {country.code && (
+                <div className="w-[40px] h-[30.5px] relative flex-shrink-0">
+                  <img
+                    src={country.icon ?? `/assets/flags/${country.code.toLowerCase()}.png`}
+                    alt={country.name}
+                    className="rounded-[4px] border object-cover border-[#F1F1F1] w-full h-full"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                </div>
+              )}
+              <span className="font-inter font-semibold text-[16px] text-[#333] flex-1 min-w-0 line-clamp-1">
+                {country.name}
+              </span>
+              <button className="text-[#A1A1A1] hover:text-[#333]">
+                <ArrowRightIcon />
+              </button>
+            </div>
+          </Link>
+        ))}
       </div>
     );
   };
 
-  const onBuyNowClick = (plan, quantity) => {
-    trackBeginCheckout({
-      cart_total: plan.selling_price * quantity,
-      currency: plan.currency || 'VND',
-      items: [{ product_id: plan.variant_id, product_name: plan.name, quantity, price: plan.selling_price }],
-    });
-    saveBssCheckoutItem(plan, quantity, BRAND);
-    router.push(`/${locale}/checkout/bss?packageId=${plan.package_id}&brand=${BRAND}&src=${viewSrc}`);
-  };
+  // countryName is now derived from countryDetails state
+  const countryName = countryDetails ? countryDetails.name : countrySlug; //
 
-  const tabs = [
-    { id: 'national', labelKey: 'travelESimPage.tabNational' },
-    { id: 'regional', labelKey: 'travelESimPage.tabRegional' },
-    { id: 'global', labelKey: 'travelESimPage.tabGlobal' },
-  ];
+  const onBuyNowClick = async ( plan, quantity, type ) => {
+    console.log(type)
+    if ( type == 'cart' ) {
+      console.log("Thêm vào giỏ hàng:", plan, quantity);
+
+       const result = await addToCart( convertSimTravelToCart( plan, quantity ));
+          console.log('kết quả', result );
+          if ( result === 'MAX_QUANTITY' ) {
+            showModalMess( {
+              label: 'Thông báo',
+              message: `Số lượng tối đa là 50 sản phẩm, vui lòng nhập lại.`,
+              type: 'error',
+            } );
+      }
+      return;
+    }
+    setSims( [ convertSimTravel( plan, quantity ) ] );
+    router.push( `/checkout/payment?src=${viewSrc}` );
+    return;
+
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F5F5]">
-      {viewSrc === 'vj' ? <HeaderCart /> : <Header />}
+      {viewSrc==="vj"?<HeaderCart/>:<Header />}
 
-      <div
-        className="relative h-[240px] md:h-[240px] flex flex-col items-start justify-start pt-[20px]"
-        style={{ backgroundImage: 'url(/assets/bg-esim.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}
+       {/* Banner Section */}
+      <div className="relative h-[240px] md:h-[240px] flex flex-col items-start justify-start pt-[20px]"
+        style={{backgroundImage: 'url(/assets/bg-esim.png)', backgroundSize: 'cover', backgroundPosition: 'center'}}
       >
-        <div className="z-10 container flex flex-col items-start gap-[24px] w-full">
+
+        <div className="z-10 container   flex flex-col items-start gap-[24px]  w-full">
           <h1 className="font-semibold text-[24px] md:text-[32px] text-center text-[#333]">
             {tbaner('bannerTitle')}
           </h1>
@@ -240,85 +275,136 @@ export default function AgencyCountryESimPlansPage() {
               onFocus={handleSearchInputFocus}
               className="w-full bg-white border border-[#DDDDDD] rounded-[8px] text-[16px] outline-none placeholder:text-[#A1A1A1] py-[20px] pr-[48px] pl-[52px] focus:ring-2 focus:ring-primary focus:border-transparent"
             />
+            {/*{searchTerm && (*/}
+            {/*  <button*/}
+            {/*    onClick={() => {*/}
+            {/*      setSearchTerm('');*/}
+            {/*      setShowFilterPopover(false);*/}
+            {/*    }}*/}
+            {/*    className="absolute inset-y-0 right-0 pr-[20px] flex items-center text-[#A1A1A1] hover:text-[#333] transition-colors"*/}
+            {/*  >*/}
+            {/*    X*/}
+            {/*  </button>*/}
+            {/*)}*/}
+
+            {/* Filter Popover */}
             {showFilterPopover && (
               <div
                 ref={popoverRef}
                 className="absolute top-full left-0 right-0 mt-[8px] bg-white border border-[#DDDDDD] rounded-[8px] shadow-lg z-50 max-h-[400px] overflow-hidden"
               >
-                {renderPopoverItems(filteredRegions)}
+                {renderPopoverItems(filteredCountries)}
               </div>
             )}
           </div>
         </div>
+        {/* cards 1 graphic - simplified or omitted for now */}
       </div>
 
+      {/* Main Content Section */}
       <main className="w-full flex flex-col items-center">
+        {/* Tabs - Using query parameters */}
         <div className="w-full bg-white border-b border-[#F1F1F1]">
-          <div className="container flex justify-between md:justify-start gap-[20px] md:gap-[40px]">
-            {tabs.map((tab) => (
-              <Link
-                key={tab.id}
-                href={`/${locale}/agency-esim?type=${tab.id}&src=${viewSrc}`}
-                className={`py-[16px] md:py-[20px] font-inter text-sm sm:text-[16px] md:text-[18px] border-b-2 hover:text-[#ED1B2F] ${
-                  activeTab === tab.id
-                    ? 'border-[#ED1B2F] text-[#ED1B2F] font-semibold'
-                    : 'border-transparent text-[#A1A1A1] font-medium'
-                }`}
-              >
-                {t(tab.labelKey)}
-              </Link>
-            ))}
+          <div className="container  flex justify-between md:justify-start gap-[20px] md:gap-[40px]">
+            {[
+              { id: 'national', labelKey: 'travelESimPage.tabNational' },
+              { id: 'regional', labelKey: 'travelESimPage.tabRegional' },
+              { id: 'global', labelKey: 'travelESimPage.tabGlobal' },
+            ].map( tab => {
+              const link = tab.id === "global"
+                  ? `/${locale}/esim/global?regions=GLOBAL&src=${viewSrc}`
+                  : `/${locale}/travel-esim/?type=${tab.id}&src=${viewSrc}`;
+              return (
+                <Link
+                  key={ tab.id }
+                  href={link}
+                  className={ `py-[16px] md:py-[20px] font-inter text-sm sm:text-[16px] md:text-[18px] border-b-2 hover:text-[#ED1B2F]
+                  ${ regions == tab.id.toUpperCase()
+                      ? 'border-[#ED1B2F] text-[#ED1B2F] font-semibold'
+                      : 'border-transparent text-[#A1A1A1] font-medium' }
+                 ${ regions == "COUNTRY" && tab.id==="national"
+                      ? '!border-[#ED1B2F] !text-[#ED1B2F] font-semibold'
+                      : '' }
+                `}
+                >
+                  { t( tab.labelKey ) }
+                </Link>
+              );
+            } )}
           </div>
         </div>
-
-        <div className="w-full px-4 xl:container xl:px-[90px] py-3 md:py-3 flex flex-col gap-[20px]">
-          <p className="font-inter text-[14px] md:text-[16px] text-[#333]">
+        {/* Country Title and Plan Grid */}
+        <div className="w-full container md:px-[90px] py-3 md:py-3 flex flex-col gap-[20px]">
+          <p className="font-inter text-[14px] md:text-[16px] text-[#333] ">
             {tbaner.rich('notice', {
               link: (chunks) => (
-                <button
-                  onClick={() => showDevicesEsim()}
-                  className="text-blue-600 hover:underline focus:outline-none"
-                >
-                  {chunks}
-                </button>
-              ),
+                  <button
+                      onClick={() => showDevicesEsim()}
+                      className="text-blue-600 hover:underline focus:outline-none"
+                  >
+                    {chunks}
+                  </button>
+              )
             })}
           </p>
           <div className="flex items-center gap-[8px] mb-[20px]">
-            <p
-              onClick={() => router.push(`/${locale}/agency-esim?type=${activeTab}&src=${viewSrc}`)}
-              className="text-[#333] hover:text-[#ED1B2F] cursor-pointer"
-            >
+            <p onClick={()=>{router.push(`/${locale}/agency-esim?type=${typeParam}&src=${viewSrc}`)}} className="text-[#333] hover:text-[#ED1B2F] cursor-pointer">
               <ChevronLeftIcon />
             </p>
             <h2 className="font-inter font-semibold text-[24px] md:text-[28px] text-[#333]">
-              {isLoading ? tCommon('loading') : (regionDetails?.name || countrySlug)}
+              {/* Display country name from state, fallback if still loading */}
+              {isLoading && activeTab === 'national' ? tCommon('loading') : (countryDetails ? countryDetails.name : countrySlug) }
+              {activeTab !== 'national' && t(activeTab === 'regional' ? 'travelESimPage.tabRegional' : 'travelESimPage.tabGlobal')}
             </h2>
           </div>
 
           {isLoading && (
             <div className="text-center py-[40px] text-[18px] text-[#666]">
-              {tCommon('loading')}
+                {tCommon('loading')}
             </div>
           )}
           {error && (
-            <div className="text-center py-[40px] text-[18px] text-red-600 bg-red-100 p-4 rounded-md">
+             <div className="text-center py-[40px] text-[18px] text-red-600 bg-red-100 p-4 rounded-md">
               <p>{tCommon('errorOccurred')}: {error}</p>
             </div>
           )}
 
-          {!isLoading && !error && regionDetails && (
-            <BssPackageSelector
-              country={regionDetails}
-              packages={packages}
-              locale={locale}
-              brand={BRAND}
-              onBuyNow={onBuyNowClick}
-            />
+          {!isLoading && !error && activeTab === 'national' && countryDetails && (
+            esimPackages.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[24px]">
+                {esimPackages.map(plan => {
+                  let nameRegion = plan?.countries_array[0]?.title || countryName;
+                  let flagUrl = plan.countries_array[0]?.image || '/assets/flags/default.png';
+                  const adaptedPlan = {
+                    id: plan.variant_id,
+                    name: plan.name,
+                    data: `${plan.data_amount} ${plan.data_unit}${dailySuffix(plan, tCommon('perDay'))}`,
+                    validity: plan.validity_days,
+                    price: new Intl.NumberFormat(locale, { style: 'currency', currency: plan.currency || 'USD' }).format(plan.selling_price),
+                    currency: plan.currency || 'USD',
+                    detailsLink: `/${ locale }/checkout?planId=${ plan.variant_id }&src=${viewSrc}`,
+                    countryName: nameRegion,
+                    countryFlagUrl : flagUrl,
+                    provider : plan.provider,
+                    countries_array:plan.countries_array
+                  };
+                  return <PlanCard key={plan.variant_id} plan={adaptedPlan} locale={locale} tPage={tPage} onBuyNowClick={onBuyNowClick} sim={plan} />;
+                })}
+              </div>
+            ) : (
+              <p className='text-neutral-800'>{tPage('countryNotFound')}</p>
+            )
+          )}
+          {activeTab === 'regional' && !isLoading && (
+            <div className="text-center py-[40px] text-[#666]">{t('travelESimPage.regionalComingSoon')}</div>
+          )}
+          {activeTab === 'global' && !isLoading && (
+            <div className="text-center py-[40px] text-[#666]">{t('travelESimPage.globalComingSoon')}</div>
           )}
         </div>
       </main>
-      {viewSrc === 'vj' ? null : <Footer />}
+      {viewSrc==="vj"?null: <Footer />}
+
     </div>
   );
 }
