@@ -133,7 +133,6 @@ export default function TravelESimPage() {
   const popoverRef = useRef(null);
   const { showDevicesEsim } = useMyEsim();
   const copy = pageCopy[locale];
-  const isVjEmbed = viewSrc === 'vj';
   const showFigmaMarketing = Boolean(copy);
 
   useEffect(() => {
@@ -509,7 +508,7 @@ export default function TravelESimPage() {
                 </div>
             </section>
 
-      {showFigmaMarketing && !isVjEmbed && <HaveEsimSection />}
+      {showFigmaMarketing && <HaveEsimSection />}
 
       {/* Main Content Section */}
       <main className="relative z-0 flex flex-col">
@@ -683,7 +682,7 @@ export default function TravelESimPage() {
           </div>
         </section>
 
-        {!isVjEmbed && <section className="bg-white py-12 md:py-20">
+        <section className="bg-white py-12 md:py-20">
           <div className="container">
             <img
               src="/assets/images/download_bg.png"
@@ -691,10 +690,10 @@ export default function TravelESimPage() {
               className="h-auto w-full"
             />
           </div>
-        </section>}
+        </section>
         </>}
       </main>
-      {viewSrc==="vj"?null:<Footer />}
+      <Footer />
     </div>
   );
 }
