@@ -2,7 +2,7 @@
 import useMyEsim from '@/app/hooks/useMyEsim';
 import { getLocal, saveLocal } from '@/app/utils/saveLocal';
 import { useRouter } from '@/i18n/navigation';
-import { BSS_BRANDS, fetchBssRegions, getRegionFlagUrl, getRegionSlug, mapTabToRegionType } from '@/app/utils/bssCatalog';
+import axios from 'axios';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -52,31 +52,45 @@ export default function VikkiTravelESimPage() {
  
 
   useEffect(() => {
-    const apiType = mapTabToRegionType(activeTab);
-    if (!apiType) {
-      setFetchedData([]);
-      return undefined;
+    let apiType = '';
+    switch (activeTab) {
+      case 'national':
+        apiType = 'COUNTRY';
+        break;
+      case 'regional':
+        apiType = 'REGIONAL';
+        break;
+      case 'global':
+        apiType = 'GLOBAL';
+        break;
+      default:
+        setFetchedData([]);
+        return;
     }
     setRegions(apiType);
 
-    let isCurrent = true;
     const fetchDataForTab = async () => {
       setIsLoadingData(true);
       try {
-        // Regions come from BSS Public API v2 through the BFF (channel is
-        // resolved server-side from the brand).
-        const items = await fetchBssRegions({ type: apiType, brand: BSS_BRANDS.VIKKI });
-        if (isCurrent) setFetchedData(items);
+        // Using the same API endpoint as the original file
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/app/get-regions-by-type/v2/${apiType}`;
+        const response = await axios.get(apiUrl);
+        
+        if (response.data && response.data.code === 200) {
+          setFetchedData(response.data.result);
+        } else {
+          console.error("Unexpected API response structure:", response.data);
+          setFetchedData([]);
+        }
       } catch (error) {
         console.error(`Failed to fetch data for ${apiType}:`, error);
-        if (isCurrent) setFetchedData([]);
+        setFetchedData([]);
       } finally {
-        if (isCurrent) setIsLoadingData(false);
+        setIsLoadingData(false);
       }
     };
 
     fetchDataForTab();
-    return () => { isCurrent = false; };
   }, [activeTab]);
 
   // Filter data based on search term
@@ -93,6 +107,10 @@ export default function VikkiTravelESimPage() {
   };
 
   const handleTabChange = (tabId) => {
+    if(tabId === 'global') {
+      router.push(`/app-vikki/travel-esim/global?regions=GLOBAL&src=${viewSrc}`);
+      return;
+    };
     saveLocal('regions', tabId);
     setActiveTab(tabId);
     setSearchTerm(''); // Clear search on tab change
@@ -194,20 +212,18 @@ export default function VikkiTravelESimPage() {
                 {filteredData.map((item, index) => (
                   <Link
                     key={item.id || index}
-                    href={`/app-vikki/travel-esim/${getRegionSlug(item)}?regions=${regions}&src=${viewSrc}`}
+                    href={`/app-vikki/travel-esim/${item.code?.toLowerCase()}?regions=${regions}&src=${viewSrc}`}
                     className="flex items-center justify-between p-4 border-b border-[#F1F1F1] last:border-b-0 hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-center gap-4">
-                        {getRegionFlagUrl(item) && (
-                          <div className="w-10 h-[30px] relative shadow-sm rounded-[4px] overflow-hidden border border-[#F1F1F1]">
-                              <img
-                                  src={getRegionFlagUrl(item)}
-                                  alt={item.name}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                              />
-                          </div>
-                        )}
+                        <div className="w-10 h-[30px] relative shadow-sm rounded-[4px] overflow-hidden border border-[#F1F1F1]">
+                            <img
+                                src={item.icon || `/assets/flags/${item.code?.toLowerCase()}.png`}
+                                alt={item.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                            />
+                        </div>
                         <span className="text-[16px] text-[#0C0C0E] font-normal">{item.name}</span>
                     </div>
                     <ChevronRightIcon />

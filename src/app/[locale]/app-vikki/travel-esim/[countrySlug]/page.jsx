@@ -1,22 +1,11 @@
 "use client";
 
-import VikkiBssPackageSelector from '@/app/components/vikki/BssPackageSelector';
-import {
-  BSS_BRANDS,
-  adaptPublicV2Package,
-  fetchAllBssPackages,
-  fetchBssRegions,
-  getRegionSlug,
-  getRequestErrorMessage,
-  normalizeRegionType,
-  saveBssCheckoutItem,
-} from '@/app/utils/bssCatalog';
 import { useRouter } from '@/i18n/navigation';
+import axios from 'axios';
 import { useTranslations } from 'next-intl';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-
-const BRAND = BSS_BRANDS.VIKKI;
+import ESimPackageCard from '../components/ESimPackageCard';
 
 // Icons
 const BackIcon = () => (
@@ -29,53 +18,70 @@ export default function VikkiCountryEsimPage() {
   const t = useTranslations('vikki.travelEsim.detailPage');
   const tCommon = useTranslations('vikki.travelEsim');
   const params = useParams();
-  const countrySlug = String(params.countrySlug || '');
+  const { countrySlug } = params;
   const router = useRouter();
   const searchParams = useSearchParams();
-  const regionType = normalizeRegionType(searchParams.get('regions')) || 'COUNTRY';
 
-  const [regionDetails, setRegionDetails] = useState(null);
-  const [packages, setPackages] = useState([]);
+
+  const [countryDetails, setCountryDetails] = useState(null);
+  const [esimPackages, setEsimPackages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const handleBuyPackage = (plan, quantity) => {
-    saveBssCheckoutItem(plan, quantity, BRAND);
-    router.push(`/app-vikki/checkout/bss?packageId=${plan.package_id}`);
+  const handleBuyPackage = (packageData, quantity) => {
+    console.log('Buying package:', packageData, 'Quantity:', quantity);
+    // Add your purchase logic here
+    // e.g., router.push(`/vikki-app/checkout?packageId=${packageData.id}&quantity=${quantity}`);
   };
 
   useEffect(() => {
-    if (!countrySlug) return undefined;
+    if (!countrySlug) return;
 
-    let isCurrent = true;
-    const load = async () => {
+    const fetchCountryAndPackages = async () => {
       setIsLoading(true);
       setError(null);
-      setRegionDetails(null);
-      setPackages([]);
       try {
-        const regions = await fetchBssRegions({ type: regionType, brand: BRAND });
-        const found = regions.find((region) => getRegionSlug(region) === countrySlug.toLowerCase());
-        if (!found) {
-          throw new Error(`Không tìm thấy thông tin cho mã: ${countrySlug}`);
+  
+        const regionType = searchParams.get('regions') || 'COUNTRY'; 
+        const countriesApiUrlDynamic = `${process.env.NEXT_PUBLIC_API_BASE_URL}/app/get-regions-by-type/v2/${regionType}`;
+
+        const countriesResponse = await axios.get(countriesApiUrlDynamic);
+
+        let foundCountry = null;
+        if (countriesResponse.data && countriesResponse.data.code === 200 && Array.isArray(countriesResponse.data.result)) {
+          foundCountry = countriesResponse.data.result.find(
+            (item) => item.code && item.code.toLowerCase() === countrySlug.toLowerCase()
+          );
+        } else {
+           // Fallback or specific error handling
+           console.warn("Could not fetch region list properly");
         }
 
-        const items = await fetchAllBssPackages({ regionId: found.id, brand: BRAND });
-        if (!isCurrent) return;
-        setPackages(items.map((pkg) => adaptPublicV2Package(pkg, found)));
-        setRegionDetails(found);
+        if (!foundCountry) {
+           // Try fetching ALL or just fail
+           throw new Error(`Không tìm thấy thông tin cho mã: ${countrySlug}`);
+        }
+        setCountryDetails(foundCountry);
+
+        const packagesApiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/app/v2/get-esim-package-by-region/${foundCountry.id}`;
+        const packagesResponse = await axios.get(packagesApiUrl);
+
+        if (packagesResponse.data && packagesResponse.data.code === 200 && Array.isArray(packagesResponse.data.result)) {
+          setEsimPackages(packagesResponse.data.result);
+        } else {
+          setEsimPackages([]);
+        }
+
       } catch (err) {
-        if (!isCurrent) return;
-        console.error('Error fetching eSIM data:', err);
-        setError(getRequestErrorMessage(err, 'Đã có lỗi xảy ra khi tải dữ liệu.'));
+        console.error("Error fetching country eSIM data:", err);
+        setError(err.message || "Đã có lỗi xảy ra khi tải dữ liệu.");
       } finally {
-        if (isCurrent) setIsLoading(false);
+        setIsLoading(false);
       }
     };
 
-    load();
-    return () => { isCurrent = false; };
-  }, [countrySlug, regionType]);
+    fetchCountryAndPackages();
+  }, [countrySlug, searchParams]);
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F5F5] font-inter text-[#0C0C0E]">
@@ -86,7 +92,7 @@ export default function VikkiCountryEsimPage() {
             <BackIcon />
           </button>
           <h1 className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[16px] font-semibold truncate max-w-[200px]">
-            {isLoading ? tCommon('loading') : regionDetails?.name || 'Gói cước eSIM'}
+            {isLoading ? tCommon('loading') : countryDetails?.name || 'Gói cước eSIM'}
           </h1>
           <div className="w-10"></div>
         </div>
@@ -94,25 +100,35 @@ export default function VikkiCountryEsimPage() {
 
       <div className="flex-1 p-4 flex flex-col gap-4">
         {isLoading && (
-          <div className="text-center py-10 text-gray-500 text-[14px]">{t('loading')}</div>
+            <div className="text-center py-10 text-gray-500 text-[14px]">{t('loading')}</div>
         )}
 
         {error && (
-          <div className="text-center py-10 text-red-500 text-[14px]">{error}</div>
+            <div className="text-center py-10 text-red-500 text-[14px]">{error}</div>
         )}
 
-        {!isLoading && !error && regionDetails && (
-          packages.length > 0 ? (
-            <VikkiBssPackageSelector
-              region={regionDetails}
-              packages={packages}
-              onBuyNow={handleBuyPackage}
-            />
-          ) : (
-            <div className="text-center py-10 text-gray-500 text-[14px]">
-              {t('noPackage', { country: regionDetails.name })}
-            </div>
-          )
+        {!isLoading && !error && countryDetails && (
+            <>
+              
+
+                {/* Packages Grid */}
+                {esimPackages.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-4">
+                        {esimPackages.map((pkg) => (
+                            <ESimPackageCard
+                                key={pkg.id}
+                                packageData={pkg}
+                                countryName={countryDetails.name}
+                                onBuy={handleBuyPackage}
+                            />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-10 text-gray-500 text-[14px]">
+                        {t('noPackage', {country: countryDetails.name})}
+                    </div>
+                )}
+            </>
         )}
       </div>
     </div>
