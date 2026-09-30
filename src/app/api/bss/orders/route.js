@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { bssFetch, isBssAuthError } from '../_lib/bss-auth';
+import { resolveBssBrand } from '../_lib/bss-brand';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,14 +23,15 @@ export async function POST(request) {
   }
 
   const idempotencyKey = request.headers.get('idempotency-key') || crypto.randomUUID();
+  const { channel, source, touchpoint } = resolveBssBrand(body?.brand);
   const orderPayload = {
-    channel: process.env.BSS_CHANNEL || 'BSS',
+    channel,
     payment_method: 'GALAXYPAY',
     customer_name: customerName,
     contact_phone: contactPhone,
     email,
-    touchpoint: 'WEB_PORTAL',
-    source: 'vietnam-homepage',
+    touchpoint,
+    source,
     segment: 'RETAIL',
     delivery_address: null,
     shipping_amount: 0,

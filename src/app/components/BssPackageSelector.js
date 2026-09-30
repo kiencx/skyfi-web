@@ -30,10 +30,11 @@ const getValidityDays = (pkg) => {
 
 const getCountryFlagUrl = (country) => {
   const isoCode = String(country.iso_code || country.code || '').trim().toLowerCase();
-  return isoCode ? `https://flagcdn.com/w160/${isoCode}.png` : null;
+  // REGION/GLOBAL destinations use numeric codes and have no flag.
+  return /^[a-z]{2}$/.test(isoCode) ? `https://flagcdn.com/w160/${isoCode}.png` : null;
 };
 
-export default function BssPackageSelector({ country, packages, locale, onBuyNow }) {
+export default function BssPackageSelector({ country, packages, locale, onBuyNow, brand = 'web' }) {
   const [selectedDataKey, setSelectedDataKey] = useState('');
   const [selectedDays, setSelectedDays] = useState('');
   const [selectedPackageId, setSelectedPackageId] = useState('');
@@ -96,7 +97,7 @@ export default function BssPackageSelector({ country, packages, locale, onBuyNow
     let current = true;
     setIsLoadingPrice(true);
     setPriceError('');
-    axios.get(`/api/bss/packages/${selectedPackage.package_id}/price?quantity=${quantity}`)
+    axios.get(`/api/bss/packages/${selectedPackage.package_id}/price?quantity=${quantity}&brand=${brand}`)
       .then((response) => {
         if (!response.data?.success) throw new Error(response.data?.message || 'Không thể kiểm tra giá gói.');
         if (current) setPrice(response.data.data);
@@ -108,7 +109,7 @@ export default function BssPackageSelector({ country, packages, locale, onBuyNow
         if (current) setIsLoadingPrice(false);
       });
     return () => { current = false; };
-  }, [quantity, selectedPackage]);
+  }, [quantity, selectedPackage, brand]);
 
   const updateQuantity = (delta) => setQuantity((current) => {
     const value = Number(current) || 1;

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { bssFetch, isBssAuthError } from '../_lib/bss-auth';
+import { resolveBssBrand } from '../_lib/bss-brand';
 
 const FILTER_KEYS = [
   'package_type', 'min_price', 'max_price', 'currency', 'min_data', 'max_data',
@@ -20,7 +21,7 @@ export async function GET(request) {
     );
   }
 
-  const query = new URLSearchParams({ channel: process.env.BSS_CHANNEL || 'BSS' });
+  const query = new URLSearchParams({ channel: resolveBssBrand(searchParams.get('brand')).channel });
   if (countryCode) query.set('country_code', countryCode.toUpperCase());
   if (regionId) query.set('region_id', regionId);
   FILTER_KEYS.forEach((key) => {
