@@ -11,6 +11,8 @@ export const BSS_BRANDS = {
 export const BSS_CHECKOUT_ITEM_KEY = 'bssCheckoutItem';
 export const BSS_LAST_ORDER_KEY = 'bssLastOrderNumber';
 export const BSS_LAST_BRAND_KEY = 'bssLastOrderBrand';
+// `src` (e.g. `vj` for the VietJet iframe) must survive the GalaxyPay round trip.
+export const BSS_LAST_SRC_KEY = 'bssLastOrderSrc';
 
 const TAB_TO_REGION_TYPE = { national: 'COUNTRY', regional: 'REGION', global: 'GLOBAL' };
 const REGION_TYPE_TO_TAB = { COUNTRY: 'national', REGION: 'regional', GLOBAL: 'global' };
