@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { bssFetch, isBssAuthError } from '../_lib/bss-auth';
+import { resolveBssBrand } from '../_lib/bss-brand';
 
 const ALLOWED_TYPES = new Set(['COUNTRY', 'REGION', 'GLOBAL']);
 
@@ -16,7 +17,7 @@ export async function GET(request) {
     );
   }
 
-  const channel = process.env.BSS_CHANNEL || 'BSS';
+  const { channel } = resolveBssBrand(searchParams.get('brand'));
 
   try {
     const query = new URLSearchParams({ type, channel });

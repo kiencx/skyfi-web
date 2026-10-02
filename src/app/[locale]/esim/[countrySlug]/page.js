@@ -93,12 +93,11 @@ export default function CountryESimPlansPage() {
   const tPage = useTranslations('countryEsimPage');
   const tCommon = useTranslations( 'common' );
   const tbaner = useTranslations('travelESimPage');
-  const showFigmaMarketing = viewSrc !== 'vj';
 
   const tabs = [
-    { id: 'national', label: locale === 'vi' && showFigmaMarketing ? 'Danh sách quốc gia' : tbaner('tabNational') },
-    { id: 'regional', label: locale === 'vi' && showFigmaMarketing ? 'Khu vực' : tbaner('tabRegional') },
-    { id: 'global', label: locale === 'vi' && showFigmaMarketing ? 'Toàn cầu' : tbaner('tabGlobal') },
+    { id: 'national', label: locale === 'vi' ? 'Danh sách quốc gia' : tbaner('tabNational') },
+    { id: 'regional', label: locale === 'vi' ? 'Khu vực' : tbaner('tabRegional') },
+    { id: 'global', label: locale === 'vi' ? 'Toàn cầu' : tbaner('tabGlobal') },
   ];
 
   const tabHref = (tabId) => `/${locale}/travel-esim/?type=${tabId}&src=${viewSrc}`;
@@ -302,50 +301,6 @@ export default function CountryESimPlansPage() {
       {viewSrc==="vj"?<HeaderCart/>:<Header />}
 
        {/* Banner Section */}
-        {viewSrc==="vj"?(
-            <div className="relative  flex flex-col items-start justify-start py-[20px]"
-            >
-                <div className="z-10 px-4 xl:container flex flex-col items-start  w-full">
-                    <div className="relative w-full md:max-w-[680px]">
-                        <div className="absolute inset-y-0 left-0 pl-[20px] flex items-center pointer-events-none">
-                            <SearchIcon />
-                        </div>
-                        <input
-                            ref={searchInputRef}
-                            type="search"
-                            placeholder={tbaner('searchPlaceholder')}
-                            value={searchTerm}
-                            onChange={handleSearchInputChange}
-                            onFocus={handleSearchInputFocus}
-                            className="w-full bg-white border border-[#DDDDDD] rounded-[8px] text-[16px] outline-none placeholder:text-[#A1A1A1] py-[20px] pr-[48px] pl-[52px] focus:ring-2 focus:ring-primary focus:border-transparent"
-                        />
-                        {/*{searchTerm && (*/}
-                        {/*  <button*/}
-                        {/*    onClick={() => {*/}
-                        {/*      setSearchTerm('');*/}
-                        {/*      setShowFilterPopover(false);*/}
-                        {/*    }}*/}
-                        {/*    className="absolute inset-y-0 right-0 pr-[20px] flex items-center text-[#A1A1A1] hover:text-[#333] transition-colors"*/}
-                        {/*  >*/}
-                        {/*    X*/}
-                        {/*  </button>*/}
-                        {/*)}*/}
-
-                        {/* Filter Popover */}
-                        {showFilterPopover && (
-                            <div
-                                ref={popoverRef}
-                                className="absolute top-full left-0 right-0 mt-[8px] bg-white border border-[#DDDDDD] rounded-[8px] shadow-lg z-50 max-h-[400px] overflow-hidden"
-                            >
-                                {renderPopoverItems(filteredCountries)}
-                            </div>
-                        )}
-                    </div>
-                </div>
-                {/* cards 1 graphic - simplified or omitted for now */}
-            </div>
-
-        ):(
             <div className="relative h-[240px] md:h-[240px] flex flex-col items-start justify-start pt-[20px]"
                  style={{backgroundImage: 'url(/assets/bg-esim.png)', backgroundSize: 'cover', backgroundPosition: 'center'}}
             >
@@ -393,51 +348,28 @@ export default function CountryESimPlansPage() {
                 {/* cards 1 graphic - simplified or omitted for now */}
             </div>
 
-        )}
-
       {/* Main Content Section */}
       <main className="w-full flex flex-col items-center">
-        {!showFigmaMarketing && (
-          <div className="w-full bg-white border-b border-[#F1F1F1]">
-            <div className="px-4 xl:container flex justify-between md:justify-start gap-[20px] md:gap-[40px]">
-              {tabs.map((tab) => (
+        {/* Country Title and Plan Grid */}
+        <div className="w-full px-4 xl:container xl:px-[90px] py-3 md:py-3 flex flex-col gap-[20px]">
+          <nav aria-label="Loại eSIM" className="inline-flex w-fit items-center gap-2 rounded-2xl bg-[#ddd] p-[6px]">
+            {tabs.map((tab) => {
+              const isActive = isTabActive(tab.id);
+              return (
                 <Link
                   key={tab.id}
                   href={tabHref(tab.id)}
-                  className={`py-[16px] md:py-[20px] font-inter text-sm sm:text-[16px] md:text-[18px] border-b-2 hover:text-[#ED1B2F] ${
-                    isTabActive(tab.id)
-                      ? 'border-[#ED1B2F] text-[#ED1B2F] font-semibold'
-                      : 'border-transparent text-[#A1A1A1] font-medium'
+                  className={`h-10 rounded-[14px] px-4 py-[10px] font-inter text-sm font-semibold leading-5 transition-colors ${
+                    isActive
+                      ? 'bg-[#faa61a] text-white shadow-[inset_-3px_2px_3.2px_rgba(0,0,0,0.25)]'
+                      : 'bg-white text-[#d0d0d0] hover:text-[#666]'
                   }`}
                 >
                   {tab.label}
                 </Link>
-              ))}
-            </div>
-          </div>
-        )}
-        {/* Country Title and Plan Grid */}
-        <div className="w-full px-4 xl:container xl:px-[90px] py-3 md:py-3 flex flex-col gap-[20px]">
-          {showFigmaMarketing && (
-            <nav aria-label="Loại eSIM" className="inline-flex w-fit items-center gap-2 rounded-2xl bg-[#ddd] p-[6px]">
-              {tabs.map((tab) => {
-                const isActive = isTabActive(tab.id);
-                return (
-                  <Link
-                    key={tab.id}
-                    href={tabHref(tab.id)}
-                    className={`h-10 rounded-[14px] px-4 py-[10px] font-inter text-sm font-semibold leading-5 transition-colors ${
-                      isActive
-                        ? 'bg-[#faa61a] text-white shadow-[inset_-3px_2px_3.2px_rgba(0,0,0,0.25)]'
-                        : 'bg-white text-[#d0d0d0] hover:text-[#666]'
-                    }`}
-                  >
-                    {tab.label}
-                  </Link>
-                );
-              })}
-            </nav>
-          )}
+              );
+            })}
+          </nav>
           <p className="font-inter text-[14px] md:text-[16px] text-[#333] ">
             {tbaner.rich('notice', {
               link: (chunks) => (

@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import Footer from '../../../components/Footer';
 import Header from '../../../components/Header';
+import HeaderCart from '@/app/components/HeaderCart';
+import { BSS_LAST_BRAND_KEY, BSS_LAST_ORDER_KEY, BSS_LAST_SRC_KEY, normalizeBrand } from '@/app/utils/bssCatalog';
 
 const SELECTED_PACKAGE_KEY = 'bssCheckoutItem';
 
@@ -20,6 +22,8 @@ export default function BssCheckoutPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const packageId = searchParams.get('packageId');
+  const brand = normalizeBrand(searchParams.get('brand'));
+  const viewSrc = searchParams.get('src') || 'skyfi';
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [price, setPrice] = useState(null);
   const [isLoadingPrice, setIsLoadingPrice] = useState(true);
@@ -44,7 +48,7 @@ export default function BssCheckoutPage() {
       }
       setSelectedPackage(item);
 
-      axios.get(`/api/bss/packages/${item.package_id}/price?quantity=${item.quantity}`)
+      axios.get(`/api/bss/packages/${item.package_id}/price?quantity=${item.quantity}&brand=${brand}`)
         .then((response) => {
           if (!response.data?.success) throw new Error(response.data?.message || 'Không thể kiểm tra giá gói.');
           setPrice(response.data.data);
@@ -55,7 +59,7 @@ export default function BssCheckoutPage() {
       setError('Dữ liệu gói eSIM không hợp lệ. Vui lòng chọn lại gói.');
       setIsLoadingPrice(false);
     }
-  }, [packageId]);
+  }, [packageId, brand]);
 
   const updateField = (event) => {
     const { name, value, checked, type } = event.target;
@@ -71,6 +75,7 @@ export default function BssCheckoutPage() {
     }
 
     const orderInput = {
+      brand,
       customer_name: form.customer_name,
       contact_phone: form.contact_phone,
       email: form.email,
@@ -93,7 +98,9 @@ export default function BssCheckoutPage() {
         throw new Error(response.data?.message || 'Không thể tạo đơn hàng.');
       }
 
-      window.sessionStorage.setItem('bssLastOrderNumber', order.order_number);
+      window.sessionStorage.setItem(BSS_LAST_ORDER_KEY, order.order_number);
+      window.sessionStorage.setItem(BSS_LAST_BRAND_KEY, brand);
+      window.sessionStorage.setItem(BSS_LAST_SRC_KEY, viewSrc);
       setOrderNumber(order.order_number);
       if (order.payment_url) {
         window.location.assign(order.payment_url);
@@ -112,7 +119,7 @@ export default function BssCheckoutPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f7f7f7]">
-      <Header />
+      {viewSrc === 'vj' ? <HeaderCart /> : <Header />}
       <main className="container flex-1 py-10 md:py-16">
         <button type="button" onClick={() => router.back()} className="mb-6 text-sm font-medium text-[#333] hover:text-[#ed1b2f]">← Quay lại chọn gói</button>
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
@@ -150,7 +157,7 @@ export default function BssCheckoutPage() {
           </aside>
         </div>
       </main>
-      <Footer />
+      {viewSrc === 'vj' ? null : <Footer />}
     </div>
   );
 }

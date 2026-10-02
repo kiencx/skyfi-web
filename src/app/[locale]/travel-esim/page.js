@@ -12,7 +12,6 @@ import HeaderCart from "@/app/components/HeaderCart";
 import {trackProductListView, trackPageView, trackSearch} from "@/app/utils/trackingHelper";
 
 
-const SearchIcon = () => <img src="/assets/search-icon.svg" alt="" className="h-6 w-6" />;
 const ArrowRight = () => <span aria-hidden="true" className="text-[22px] leading-none">→</span>;
 const getCountryFlagUrl = (country) => {
   const isoCode = String(country.iso_code || country.code || '').trim().toLowerCase();
@@ -134,7 +133,7 @@ export default function TravelESimPage() {
   const popoverRef = useRef(null);
   const { showDevicesEsim } = useMyEsim();
   const copy = pageCopy[locale];
-  const showFigmaMarketing = viewSrc !== 'vj' && Boolean(copy);
+  const showFigmaMarketing = Boolean(copy);
 
   useEffect(() => {
     // Update activeTab when URL query parameter changes and clear search
@@ -460,50 +459,6 @@ export default function TravelESimPage() {
 
 
       {/* Banner Section */}
-        {viewSrc==="vj"?(
-            <div className="relative  flex flex-col items-start justify-start py-[20px]"
-            >
-                <div className="z-10 px-4 xl:container flex flex-col items-start  w-full">
-                    <div className="relative w-full md:max-w-[680px]">
-                        <div className="absolute inset-y-0 left-0 pl-[20px] flex items-center pointer-events-none">
-                            <SearchIcon />
-                        </div>
-                        <input
-                            ref={searchInputRef}
-                            type="search"
-                            placeholder={t('searchPlaceholder')}
-                            value={searchTerm}
-                            onChange={handleSearchInputChange}
-                            onFocus={handleSearchInputFocus}
-                            className="w-full bg-white border border-[#DDDDDD] rounded-[8px] text-[16px] outline-none placeholder:text-[#A1A1A1] py-[20px] pr-[48px] pl-[52px] focus:ring-2 focus:ring-primary focus:border-transparent"
-                        />
-                        {/*{searchTerm && (*/}
-                        {/*  <button*/}
-                        {/*    onClick={() => {*/}
-                        {/*      setSearchTerm('');*/}
-                        {/*      setShowFilterPopover(false);*/}
-                        {/*    }}*/}
-                        {/*    className="absolute inset-y-0 right-0 pr-[20px] flex items-center text-[#A1A1A1] hover:text-[#333] transition-colors"*/}
-                        {/*  >*/}
-                        {/*    X*/}
-                        {/*  </button>*/}
-                        {/*)}*/}
-
-                        {/* Filter Popover */}
-                        {showFilterPopover && (
-                            <div
-                                ref={popoverRef}
-                                className="absolute top-full left-0 right-0 mt-[8px] bg-white border border-[#DDDDDD] rounded-[8px] shadow-lg z-50 max-h-[400px] overflow-hidden"
-                            >
-                                {renderPopoverItems(filteredData, currentDataType)}
-                            </div>
-                        )}
-                    </div>
-                </div>
-                {/* cards 1 graphic - simplified or omitted for now */}
-            </div>
-
-        ):(
             <section className="relative z-20 min-h-[330px] md:min-h-[370px] flex items-center overflow-visible bg-[#311f35]"
                  style={{backgroundImage: 'linear-gradient(90deg, rgba(12, 17, 39, .55), rgba(237, 27, 47, .08)), url(/assets/travel-esim-banner.png)', backgroundSize: 'cover', backgroundPosition: 'center'}}>
                 <div className="relative z-10 container w-full py-12 md:py-16">
@@ -552,8 +507,6 @@ export default function TravelESimPage() {
                     </div>
                 </div>
             </section>
-
-        )}
 
       {showFigmaMarketing && <HaveEsimSection />}
 
@@ -740,7 +693,7 @@ export default function TravelESimPage() {
         </section>
         </>}
       </main>
-      {viewSrc==="vj"?null:<Footer />}
+      <Footer />
     </div>
   );
 }

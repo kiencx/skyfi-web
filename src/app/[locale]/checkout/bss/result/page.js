@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import Footer from '../../../../components/Footer';
 import Header from '../../../../components/Header';
+import HeaderCart from '@/app/components/HeaderCart';
+import { BSS_LAST_SRC_KEY } from '@/app/utils/bssCatalog';
 
 export default function BssOrderResultPage() {
   const locale = useLocale();
@@ -15,6 +17,13 @@ export default function BssOrderResultPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const orderNumber = searchParams.get('orderNumber') || searchParams.get('order_number');
+  const [viewSrc, setViewSrc] = useState(searchParams.get('src') || 'skyfi');
+
+  useEffect(() => {
+    if (!searchParams.get('src')) {
+      setViewSrc(window.sessionStorage.getItem(BSS_LAST_SRC_KEY) || 'skyfi');
+    }
+  }, [searchParams]);
 
   const loadOrder = useCallback(async () => {
     const orderCode = orderNumber || window.sessionStorage.getItem('bssLastOrderNumber');
@@ -41,7 +50,7 @@ export default function BssOrderResultPage() {
   const isPaid = ['PAID', 'COMPLETED'].includes(order?.status);
   return (
     <div className="flex min-h-screen flex-col bg-[#f7f7f7]">
-      <Header />
+      {viewSrc === 'vj' ? <HeaderCart /> : <Header />}
       <main className="container flex-1 py-12 md:py-20">
         <div className="mx-auto max-w-xl rounded-2xl bg-white p-8 text-center shadow-sm">
           <h1 className="text-2xl font-bold text-[#333]">{isPaid ? 'Thanh toán thành công' : 'Trạng thái đơn hàng'}</h1>
@@ -55,11 +64,11 @@ export default function BssOrderResultPage() {
           </div>}
           <div className="mt-7 flex justify-center gap-3">
             <button type="button" onClick={loadOrder} className="rounded-lg border border-[#ed1b2f] px-4 py-2 font-medium text-[#ed1b2f]">Kiểm tra lại</button>
-            <button type="button" onClick={() => router.push(`/${locale}/travel-esim`)} className="rounded-lg bg-[#ed1b2f] px-4 py-2 font-medium text-white">Mua eSIM khác</button>
+            <button type="button" onClick={() => router.push(`/${locale}/travel-esim?src=${viewSrc}`)} className="rounded-lg bg-[#ed1b2f] px-4 py-2 font-medium text-white">Mua eSIM khác</button>
           </div>
         </div>
       </main>
-      <Footer />
+      {viewSrc === 'vj' ? null : <Footer />}
     </div>
   );
 }

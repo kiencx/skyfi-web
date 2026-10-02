@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { bssFetch, isBssAuthError } from '../../../_lib/bss-auth';
+import { resolveBssBrand } from '../../../_lib/bss-brand';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +15,7 @@ export async function GET(request, { params }) {
   }
 
   const query = new URLSearchParams({
-    channel: process.env.BSS_CHANNEL || 'BSS',
+    channel: resolveBssBrand(searchParams.get('brand')).channel,
     quantity: String(quantity),
   });
 
