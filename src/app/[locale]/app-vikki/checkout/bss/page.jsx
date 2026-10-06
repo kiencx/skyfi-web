@@ -7,6 +7,7 @@ import {
   BSS_BRANDS,
   BSS_LAST_BRAND_KEY,
   BSS_LAST_ORDER_KEY,
+  BSS_LAST_PAYMENT_MESSAGE_KEY,
   createBssWebviewOrder,
   fetchBssPackagePrice,
   formatBssPrice,
@@ -119,18 +120,19 @@ export default function VikkiBssCheckoutPage() {
     setError("");
     setIsSubmitting(true);
     try {
-      const { bill_id: billId } = await createBssWebviewOrder({
+      const paymentMessage = await createBssWebviewOrder({
         order,
         brand: BRAND,
         idempotencyKey: idempotencyRef.current.key,
       });
+      const billId = paymentMessage.bill_id;
       window.sessionStorage.setItem(BSS_LAST_ORDER_KEY, billId);
       window.sessionStorage.setItem(BSS_LAST_BRAND_KEY, BRAND);
+      window.sessionStorage.setItem(BSS_LAST_PAYMENT_MESSAGE_KEY, JSON.stringify(paymentMessage));
       setOrderNumber(billId);
 
-      const resultPath = `/app-vikki/checkout/bss/result?bill_id=${encodeURIComponent(billId)}`;
-      if (Number(amount) === 0 || !postVikkiPaymentMessage(billId, locale)) {
-        router.push(resultPath);
+      if (Number(amount) === 0 || !postVikkiPaymentMessage(paymentMessage)) {
+        router.push(`/app-vikki/checkout/bss/result?bill_id=${encodeURIComponent(billId)}`);
       }
     } catch (requestError) {
       setError(getRequestErrorMessage(requestError, t("errCreate")));

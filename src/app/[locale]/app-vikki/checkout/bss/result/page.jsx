@@ -6,6 +6,7 @@ import { useUserState } from "@/app/stores/user";
 import {
   BSS_BRANDS,
   BSS_LAST_ORDER_KEY,
+  BSS_LAST_PAYMENT_MESSAGE_KEY,
   fetchBssBill,
   fetchBssOrder,
   formatBssPrice,
@@ -35,6 +36,7 @@ export default function VikkiBssResultPage() {
   const [billStatus, setBillStatus] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [paymentMessage, setPaymentMessage] = useState(null);
   const pollCount = useRef(0);
   const timer = useRef(null);
 
@@ -65,6 +67,14 @@ export default function VikkiBssResultPage() {
     }
   }, [billIdParam, t]);
 
+  useEffect(() => {
+    try {
+      setPaymentMessage(JSON.parse(window.sessionStorage.getItem(BSS_LAST_PAYMENT_MESSAGE_KEY) || "null"));
+    } catch {
+      setPaymentMessage(null);
+    }
+  }, []);
+
   // Reopening the callback URL is not proof of payment: the bank confirms the
   // bill server-to-server, so keep polling (bounded) while it is still pending.
   useEffect(() => {
@@ -92,13 +102,14 @@ export default function VikkiBssResultPage() {
   const isExpired = billStatus === "expired" && !PAID_STATUSES.includes(status);
   const isSuccess = PAID_STATUSES.includes(status);
   const isFailed = FAILED_STATUSES.includes(status);
-  const canPay = status === "AWAITING_PAYMENT" && !isExpired;
+  const canPay = status === "AWAITING_PAYMENT" && !isExpired &&
+    paymentMessage?.bill_id === order?.order_number;
   const statusLabel = KNOWN_STATUSES.includes(status) ? t(`statuses.${status}`) : status;
 
   const goHome = () => router.push(sessionId ? `/app-vikki?sessionId=${sessionId}` : "/app-vikki");
   const buyAgain = () => router.push("/app-vikki/travel-esim");
   const payAgain = () => {
-    if (!postVikkiPaymentMessage(order.order_number, locale)) setError(t("errNoApp"));
+    if (!postVikkiPaymentMessage(paymentMessage)) setError(t("errNoApp"));
   };
 
   const title = isSuccess ? t("success") : isExpired ? t("expired") : isFailed ? t("failed") : t("pending");

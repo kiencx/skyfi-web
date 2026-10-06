@@ -62,7 +62,10 @@ export async function POST(request) {
     // usual `{ success, data }` envelope.
     const data = payload?.data ?? payload;
     const result = response.ok && data?.bill_id
-      ? NextResponse.json({ success: true, data: { bill_id: data.bill_id } })
+      ? NextResponse.json({
+        success: true,
+        data: { action: data.action, bill_id: data.bill_id, url_callback: data.url_callback },
+      })
       : NextResponse.json(
         { success: false, message: payload?.message || 'Unable to create order.' },
         { status: response.ok ? 502 : response.status },

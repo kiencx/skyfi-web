@@ -120,19 +120,21 @@ export async function createBssWebviewOrder({ order, brand, idempotencyKey }) {
     { headers: { 'Idempotency-Key': idempotencyKey } },
   );
   const data = unwrap(response, 'Không thể tạo đơn hàng.');
-  if (!data?.bill_id) throw new Error('Không thể tạo đơn hàng.');
+  if (!data?.bill_id || !data?.url_callback) throw new Error('Không thể tạo đơn hàng.');
   return data;
 }
 
-// The native Vikki app pays the bill, then reopens `url_callback` in the WebView.
-// Built from the current origin so UAT and production return to themselves.
-export const postVikkiPaymentMessage = (billId, locale) => {
+// Kept so the result page can re-send the same payment message.
+export const BSS_LAST_PAYMENT_MESSAGE_KEY = 'bssLastPaymentMessage';
+
+// The message is forwarded exactly as create-order-webview returns it; the
+// native Vikki app pays the bill, then reopens `url_callback` in the WebView.
+export const postVikkiPaymentMessage = ({ action, bill_id: billId, url_callback: urlCallback }) => {
   if (typeof window === 'undefined' || !window.ReactNativeWebView?.postMessage) return false;
   window.ReactNativeWebView.postMessage(JSON.stringify({
-    action: 'payment',
+    action,
     bill_id: billId,
-    bill_type: 'online',
-    url_callback: `${window.location.origin}/${locale}/app-vikki/checkout/bss/result?bill_id=${encodeURIComponent(billId)}`,
+    url_callback: urlCallback,
   }));
   return true;
 };
