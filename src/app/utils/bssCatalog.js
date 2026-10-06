@@ -104,9 +104,44 @@ export async function createBssOrder({ order, brand = BSS_BRANDS.WEB, idempotenc
   return data;
 }
 
-export async function fetchBssOrder(orderCode) {
-  const response = await axios.get(`/api/bss/orders/${encodeURIComponent(orderCode)}`);
+export async function fetchBssOrder(orderCode, brand = BSS_BRANDS.WEB) {
+  const response = await axios.get(`/api/bss/orders/${encodeURIComponent(orderCode)}`, {
+    params: { brand },
+  });
   return unwrap(response, 'Không thể kiểm tra đơn hàng.')?.order || null;
+}
+
+// WebView partners (Vikki) pay inside their own app: the order is only booked
+// here and the returned bill_id is handed to the native app via postMessage.
+export async function createBssWebviewOrder({ order, brand, idempotencyKey }) {
+  const response = await axios.post(
+    '/api/bss/webview-orders',
+    { ...order, brand },
+    { headers: { 'Idempotency-Key': idempotencyKey } },
+  );
+  const data = unwrap(response, 'Không thể tạo đơn hàng.');
+  if (!data?.bill_id) throw new Error('Không thể tạo đơn hàng.');
+  return data;
+}
+
+// The native Vikki app pays the bill, then reopens `url_callback` in the WebView.
+// Built from the current origin so UAT and production return to themselves.
+export const postVikkiPaymentMessage = (billId, locale) => {
+  if (typeof window === 'undefined' || !window.ReactNativeWebView?.postMessage) return false;
+  window.ReactNativeWebView.postMessage(JSON.stringify({
+    action: 'payment',
+    bill_id: billId,
+    bill_type: 'online',
+    url_callback: `${window.location.origin}/${locale}/app-vikki/checkout/bss/result?bill_id=${encodeURIComponent(billId)}`,
+  }));
+  return true;
+};
+
+export async function fetchBssBill(billId, brand) {
+  const response = await axios.get(`/api/bss/bills/${encodeURIComponent(billId)}`, {
+    params: { brand },
+  });
+  return unwrap(response, 'Không thể kiểm tra hóa đơn.');
 }
 
 // Package v2 is identified by `package_id`; keep the legacy aliases so shared

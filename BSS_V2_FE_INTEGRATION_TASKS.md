@@ -48,6 +48,9 @@ BSS_AUTH_BASE_URL=https://api-staging.skyfi.vn
 BSS_PARTNER_USERNAME=
 BSS_PARTNER_PASSWORD=
 BSS_CHANNEL=BSS
+# Vikki WebView: tài khoản PARTNER_API gắn channel WEBVIEW_VIKKI_BANK (create-order-webview, bills)
+BSS_VIKKI_USERNAME=
+BSS_VIKKI_PASSWORD=
 ```
 
 Không thêm các biến trên vào `NEXT_PUBLIC_*`, không commit giá trị thật và không dùng tài khoản Postman demo trong source code.
