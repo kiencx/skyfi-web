@@ -365,7 +365,7 @@ export default function TravelESimPage() {
 
     if (showFigmaMarketing && type === 'COUNTRY') {
       return (
-        <div className="grid grid-cols-1 justify-items-center gap-4 min-[620px]:grid-cols-2 lg:grid-cols-3 xl:justify-items-start min-[1920px]:grid-cols-4">
+        <div className="grid grid-cols-1 justify-items-center gap-4 min-[620px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[repeat(3,286px)] xl:justify-between min-[1920px]:grid-cols-[repeat(4,286px)]">
           {items.map(item => (
             <Link
               key={item.id}
