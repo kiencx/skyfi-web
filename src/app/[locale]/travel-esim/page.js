@@ -365,14 +365,14 @@ export default function TravelESimPage() {
 
     if (showFigmaMarketing && type === 'COUNTRY') {
       return (
-        <div className="grid grid-cols-1 justify-items-center gap-4 min-[620px]:grid-cols-2 lg:grid-cols-3 xl:justify-items-start min-[1920px]:grid-cols-4">
+        <div className="grid grid-cols-1 justify-items-center gap-4 min-[620px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[repeat(3,286px)] xl:justify-between min-[1920px]:grid-cols-[repeat(4,286px)]">
           {items.map(item => (
             <Link
               key={item.id}
               href={`/esim/${(item.code || item.id).toString().toLowerCase()}?type=${activeTab}&regions=${type}&src=${viewSrc}`}
-              className="group flex w-[286px]"
+              className="group flex w-full max-w-[286px]"
             >
-              <article className="h-[102px] w-[286px] overflow-hidden bg-white rounded-[22px] border border-[#d6d6d6] shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-[#ed1b2f]/30 group-hover:shadow-[0_8px_18px_rgba(0,0,0,0.09)] flex items-stretch">
+              <article className="h-[102px] w-full overflow-hidden bg-white rounded-[22px] border border-[#d6d6d6] shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-[#ed1b2f]/30 group-hover:shadow-[0_8px_18px_rgba(0,0,0,0.09)] flex items-stretch">
                 {item.code && (
                   <div className="w-[32%] shrink-0 overflow-hidden bg-[#f7f7f7]">
                     <img
@@ -533,7 +533,7 @@ export default function TravelESimPage() {
 
         {/* Notice and Country Grid */}
         <section className="bg-[#f7f7f7] py-10 md:py-16">
-        <div className="px-4 xl:container">
+        <div className="container">
           <div className="max-w-[760px] mb-8 md:mb-10">
             <h2 className="font-inter font-bold text-[36px] leading-tight text-[#333]">
               {showFigmaMarketing ? <>{copy.popularTitle} <span className="text-[#ED1B2F]">{copy.popularHighlight}</span></> : t('bannerTitle')}
