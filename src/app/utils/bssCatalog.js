@@ -120,7 +120,7 @@ export async function createBssWebviewOrder({ order, brand, idempotencyKey }) {
     { headers: { 'Idempotency-Key': idempotencyKey } },
   );
   const data = unwrap(response, 'Không thể tạo đơn hàng.');
-  if (!data?.bill_id || !data?.url_callback) throw new Error('Không thể tạo đơn hàng.');
+  if (!data?.bill_id) throw new Error('Không thể tạo đơn hàng.');
   return data;
 }
 
@@ -128,7 +128,7 @@ export async function createBssWebviewOrder({ order, brand, idempotencyKey }) {
 export const BSS_LAST_PAYMENT_MESSAGE_KEY = 'bssLastPaymentMessage';
 
 // The message is forwarded exactly as create-order-webview returns it; the
-// native Vikki app pays the bill, then reopens `url_callback` in the WebView.
+// native Vikki app pays the bill identified by `bill_id`.
 export const postVikkiPaymentMessage = ({ action, bill_id: billId, url_callback: urlCallback }) => {
   if (typeof window === 'undefined' || !window.ReactNativeWebView?.postMessage) return false;
   window.ReactNativeWebView.postMessage(JSON.stringify({
