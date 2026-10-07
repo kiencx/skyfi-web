@@ -21,7 +21,8 @@ export async function GET(request) {
     );
   }
 
-  const query = new URLSearchParams({ channel: resolveBssBrand(searchParams.get('brand')).channel });
+  const { channel, account } = resolveBssBrand(searchParams.get('brand'));
+  const query = new URLSearchParams({ channel });
   if (countryCode) query.set('country_code', countryCode.toUpperCase());
   if (regionId) query.set('region_id', regionId);
   FILTER_KEYS.forEach((key) => {
@@ -33,6 +34,7 @@ export async function GET(request) {
     const response = await bssFetch(
       `/api/bss/app/v2/public/packages?${query.toString()}`,
       { cache: 'no-store' },
+      { account },
     );
     const payload = await response.json().catch(() => null);
 

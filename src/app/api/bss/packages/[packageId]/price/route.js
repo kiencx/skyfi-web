@@ -14,15 +14,14 @@ export async function GET(request, { params }) {
     return NextResponse.json({ success: false, message: 'Invalid package id or quantity.' }, { status: 400 });
   }
 
-  const query = new URLSearchParams({
-    channel: resolveBssBrand(searchParams.get('brand')).channel,
-    quantity: String(quantity),
-  });
+  const { channel, account } = resolveBssBrand(searchParams.get('brand'));
+  const query = new URLSearchParams({ channel, quantity: String(quantity) });
 
   try {
     const response = await bssFetch(
       `/api/bss/app/v2/public/packages/${encodeURIComponent(packageId)}/price?${query}`,
       { cache: 'no-store' },
+      { account },
     );
     const payload = await response.json().catch(() => null);
     return NextResponse.json(payload || { success: false, message: 'Invalid response from BSS API.' }, { status: response.status });

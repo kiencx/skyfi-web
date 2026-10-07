@@ -17,13 +17,14 @@ export async function GET(request) {
     );
   }
 
-  const { channel } = resolveBssBrand(searchParams.get('brand'));
+  const { channel, account } = resolveBssBrand(searchParams.get('brand'));
 
   try {
     const query = new URLSearchParams({ type, channel });
     const response = await bssFetch(
       `/api/bss/app/v2/public/regions?${query.toString()}`,
       { cache: 'no-store' },
+      { account },
     );
     const payload = await response.json().catch(() => null);
     return NextResponse.json(

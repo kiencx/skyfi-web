@@ -10,17 +10,29 @@ class BssAuthError extends Error {
   }
 }
 
-let credentials = {
-  accessToken: null,
-  refreshToken: null,
-  expiresAt: 0,
+// Each partner account (and so each BSS channel) has its own token.
+const ACCOUNT_ENV = {
+  default: { username: 'BSS_PARTNER_USERNAME', password: 'BSS_PARTNER_PASSWORD' },
+  vikki: { username: 'BSS_VIKKI_USERNAME', password: 'BSS_VIKKI_PASSWORD' },
 };
-let pendingAuthentication = null;
 
-const getConfig = () => {
+const sessions = new Map();
+
+const getSession = (account) => {
+  if (!sessions.has(account)) {
+    sessions.set(account, {
+      credentials: { accessToken: null, refreshToken: null, expiresAt: 0 },
+      pending: null,
+    });
+  }
+  return sessions.get(account);
+};
+
+const getConfig = (account = 'default') => {
+  const env = ACCOUNT_ENV[account] || ACCOUNT_ENV.default;
   const baseUrl = process.env.BSS_API_BASE_URL?.replace(/\/$/, '');
-  const username = process.env.BSS_PARTNER_USERNAME;
-  const password = process.env.BSS_PARTNER_PASSWORD;
+  const username = process.env[env.username];
+  const password = process.env[env.password];
 
   if (!baseUrl || !username || !password) {
     throw new BssAuthError('BSS authentication is not configured.', 503);
@@ -56,8 +68,8 @@ const getTokenData = (payload, previousRefreshToken = null) => {
   return { accessToken, refreshToken, expiresAt };
 };
 
-const requestToken = async (path, body, previousRefreshToken = null) => {
-  const { baseUrl } = getConfig();
+const requestToken = async (account, path, body, previousRefreshToken = null) => {
+  const { baseUrl } = getConfig(account);
   let response;
 
   try {
@@ -82,47 +94,50 @@ const requestToken = async (path, body, previousRefreshToken = null) => {
   return getTokenData(payload, previousRefreshToken);
 };
 
-const login = async () => {
-  const { username, password } = getConfig();
-  return requestToken('/api/v1/auth/login', { username, password });
+const login = async (account) => {
+  const { username, password } = getConfig(account);
+  return requestToken(account, '/api/v1/auth/login', { username, password });
 };
 
-const refresh = async () => requestToken(
+const refresh = async (account, refreshToken) => requestToken(
+  account,
   '/api/v1/auth/refresh',
-  { refreshToken: credentials.refreshToken },
-  credentials.refreshToken,
+  { refreshToken },
+  refreshToken,
 );
 
-const tokenIsUsable = () => (
+const tokenIsUsable = ({ credentials }) => (
   Boolean(credentials.accessToken) && credentials.expiresAt > Date.now() + TOKEN_REFRESH_BUFFER_MS
 );
 
-const refreshOrLogin = async (forceRefresh = false) => {
-  if (!forceRefresh && tokenIsUsable()) return credentials.accessToken;
+const refreshOrLogin = async (account, forceRefresh = false) => {
+  const session = getSession(account);
+  if (!forceRefresh && tokenIsUsable(session)) return session.credentials.accessToken;
 
-  if (credentials.refreshToken) {
+  if (session.credentials.refreshToken) {
     try {
-      credentials = await refresh();
-      return credentials.accessToken;
+      session.credentials = await refresh(account, session.credentials.refreshToken);
+      return session.credentials.accessToken;
     } catch (error) {
       if (!(error instanceof BssAuthError)) throw error;
     }
   }
 
-  credentials = await login();
-  return credentials.accessToken;
+  session.credentials = await login(account);
+  return session.credentials.accessToken;
 };
 
-export const getBssAccessToken = async ({ forceRefresh = false } = {}) => {
-  if (!forceRefresh && tokenIsUsable()) return credentials.accessToken;
+export const getBssAccessToken = async ({ forceRefresh = false, account = 'default' } = {}) => {
+  const session = getSession(account);
+  if (!forceRefresh && tokenIsUsable(session)) return session.credentials.accessToken;
 
-  if (!pendingAuthentication) {
-    pendingAuthentication = refreshOrLogin(forceRefresh).finally(() => {
-      pendingAuthentication = null;
+  if (!session.pending) {
+    session.pending = refreshOrLogin(account, forceRefresh).finally(() => {
+      session.pending = null;
     });
   }
 
-  return pendingAuthentication;
+  return session.pending;
 };
 
 const withAuthorization = (init, accessToken) => {
@@ -131,19 +146,20 @@ const withAuthorization = (init, accessToken) => {
   return { ...init, headers };
 };
 
-export const bssFetch = async (path, init = {}) => {
-  const { baseUrl } = getConfig();
+export const bssFetch = async (path, init = {}, { account = 'default' } = {}) => {
+  const { baseUrl } = getConfig(account);
   const request = async (accessToken) => fetch(
     `${baseUrl}${path}`,
     withAuthorization(init, accessToken),
   );
 
-  let response = await request(await getBssAccessToken());
+  let response = await request(await getBssAccessToken({ account }));
   if (response.status !== 401) return response;
 
-  credentials.accessToken = null;
-  credentials.expiresAt = 0;
-  response = await request(await getBssAccessToken({ forceRefresh: true }));
+  const session = getSession(account);
+  session.credentials.accessToken = null;
+  session.credentials.expiresAt = 0;
+  response = await request(await getBssAccessToken({ forceRefresh: true, account }));
   return response;
 };
 
