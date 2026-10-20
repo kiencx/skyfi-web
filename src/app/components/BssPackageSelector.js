@@ -2,6 +2,7 @@
 
 import axios from 'axios';
 import { useEffect, useMemo, useState } from 'react';
+import { getBssAssetUrl } from '@/app/utils/bssCatalog';
 
 const MAX_QUANTITY = 50;
 
@@ -28,20 +29,21 @@ const getValidityDays = (pkg) => {
   return Number.isFinite(days) ? days : null;
 };
 
-const getCountryFlagUrl = (country) => {
-  const isoCode = String(country.iso_code || country.code || '').trim().toLowerCase();
-  // REGION/GLOBAL destinations use numeric codes and have no flag.
-  return /^[a-z]{2}$/.test(isoCode) ? `https://flagcdn.com/w160/${isoCode}.png` : null;
-};
-
 export default function BssPackageSelector({ country, packages, locale, onBuyNow, brand = 'web' }) {
-  const [selectedDataKey, setSelectedDataKey] = useState('');
-  const [selectedDays, setSelectedDays] = useState('');
-  const [selectedPackageId, setSelectedPackageId] = useState('');
+  const [pickedDataKey, setPickedDataKey] = useState('');
+  const [pickedDays, setPickedDays] = useState('');
+  const [pickedPackageId, setPickedPackageId] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [price, setPrice] = useState(null);
   const [priceError, setPriceError] = useState('');
   const [isLoadingPrice, setIsLoadingPrice] = useState(false);
+  // No fallback image: a missing or broken image_url is surfaced so the asset gets fixed on BSS.
+  const imageUrl = getBssAssetUrl(country.image_url);
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [imageUrl]);
 
   const dataChoices = useMemo(() => {
     const byKey = new Map(packages.map(getDataOption).filter(Boolean).map((option) => [option.key, option]));
@@ -52,6 +54,12 @@ export default function BssPackageSelector({ country, packages, locale, onBuyNow
     return [...new Set(packages.map(getValidityDays).filter((days) => days !== null))].sort((left, right) => left - right);
   }, [packages]);
 
+  // The effective selection is derived during render (user pick if still valid, else the first valid option)
+  // so switching data/days never renders an intermediate empty state.
+  const selectedDataKey = dataChoices.some((option) => option.key === pickedDataKey)
+    ? pickedDataKey
+    : (dataChoices[0]?.key || '');
+
   // Only validity days that have a package for the selected data amount can be picked.
   const availableDays = useMemo(() => new Set(
     packages
@@ -60,32 +68,30 @@ export default function BssPackageSelector({ country, packages, locale, onBuyNow
       .filter((days) => days !== null),
   ), [packages, selectedDataKey]);
 
+  const firstAvailableDays = validityChoices.find((days) => availableDays.has(days));
+  const selectedDays = availableDays.has(Number(pickedDays))
+    ? pickedDays
+    : (firstAvailableDays === undefined ? '' : String(firstAvailableDays));
+
   const suggestedPackages = useMemo(() => packages.filter((pkg) => (
     getDataOption(pkg)?.key === selectedDataKey && String(getValidityDays(pkg)) === selectedDays
   )), [packages, selectedDataKey, selectedDays]);
 
+  // Fall back to the first suggestion so the buy-now panel is visible without an extra click.
   const selectedPackage = useMemo(
-    () => suggestedPackages.find((pkg) => String(pkg.package_id) === String(selectedPackageId)) || null,
-    [suggestedPackages, selectedPackageId],
+    () => suggestedPackages.find((pkg) => String(pkg.package_id) === String(pickedPackageId)) || suggestedPackages[0] || null,
+    [suggestedPackages, pickedPackageId],
   );
 
-  useEffect(() => {
-    if (dataChoices.length && !dataChoices.some((option) => option.key === selectedDataKey)) {
-      setSelectedDataKey(dataChoices[0].key);
-    }
-  }, [dataChoices, selectedDataKey]);
-
-  useEffect(() => {
-    if (!availableDays.has(Number(selectedDays))) {
-      const firstAvailable = validityChoices.find((days) => availableDays.has(days));
-      setSelectedDays(firstAvailable === undefined ? '' : String(firstAvailable));
-    }
-  }, [availableDays, selectedDays, validityChoices]);
-
-  useEffect(() => {
-    setSelectedPackageId('');
+  const selectDataKey = (key) => {
+    setPickedDataKey(key);
     setQuantity(1);
-  }, [selectedDataKey, selectedDays]);
+  };
+
+  const selectDays = (days) => {
+    setPickedDays(String(days));
+    setQuantity(1);
+  };
 
   useEffect(() => {
     if (!selectedPackage || !Number.isInteger(quantity) || quantity < 1) {
@@ -100,7 +106,7 @@ export default function BssPackageSelector({ country, packages, locale, onBuyNow
     axios.get(`/api/bss/packages/${selectedPackage.package_id}/price?quantity=${quantity}&brand=${brand}`)
       .then((response) => {
         if (!response.data?.success) throw new Error(response.data?.message || 'Không thể kiểm tra giá gói.');
-        if (current) setPrice(response.data.data);
+        if (current) setPrice({ ...response.data.data, pricedFor: `${selectedPackage.package_id}:${quantity}` });
       })
       .catch((error) => {
         if (current) setPriceError(error.response?.data?.message || error.message || 'Không thể kiểm tra giá gói.');
@@ -134,18 +140,33 @@ export default function BssPackageSelector({ country, packages, locale, onBuyNow
       setQuantity(MAX_QUANTITY);
     }
   };
-  const displayTotal = price?.total_price ?? (selectedPackage ? Number(selectedPackage.selling_price) * quantity : 0);
-  const currency = price?.currency || selectedPackage?.currency || 'VND';
+  // A price only counts for the package/quantity it was fetched for; until then show the list-price
+  // estimate (dimmed) instead of the previous package's price or a loading label.
+  const currentPrice = selectedPackage && price?.pricedFor === `${selectedPackage.package_id}:${quantity}` ? price : null;
+  const isPricing = Boolean(selectedPackage) && !priceError && (isLoadingPrice || !currentPrice);
+  const estimatedTotal = selectedPackage ? Number(selectedPackage.selling_price) * (Number(quantity) || 1) : 0;
+  const displayTotal = currentPrice ? currentPrice.total_price : estimatedTotal;
+  const currency = currentPrice?.currency || selectedPackage?.currency || 'VND';
 
   return (
     <section className="rounded-2xl bg-white p-5 shadow-[0_6px_24px_rgba(0,0,0,0.06)] md:p-7">
       <div className="grid gap-7 lg:grid-cols-[minmax(260px,360px)_minmax(0,1fr)]">
         <div className="max-h-[700px] overflow-hidden rounded-2xl bg-[#f6f6f6]">
-          <img
-            src={getCountryFlagUrl(country) || '/assets/travel-esim-banner.png'}
-            alt={`eSIM ${country.name}`}
-            className="h-full max-h-[700px] min-h-[260px] w-full object-cover"
-          />
+          {imageUrl && !imageFailed ? (
+            <img
+              src={imageUrl}
+              alt={`eSIM ${country.name}`}
+              className="h-full max-h-[700px] min-h-[260px] w-full object-cover"
+              onError={() => setImageFailed(true)}
+            />
+          ) : (
+            <div role="alert" className="flex h-full min-h-[260px] flex-col items-center justify-center gap-2 p-6 text-center">
+              <p className="font-semibold text-red-600">
+                {imageUrl ? 'Không tải được ảnh quốc gia' : 'Chưa có ảnh cho quốc gia này'}
+              </p>
+              {imageUrl && <p className="break-all text-xs text-[#888]">{imageUrl}</p>}
+            </div>
+          )}
         </div>
 
         <div>
@@ -159,7 +180,7 @@ export default function BssPackageSelector({ country, packages, locale, onBuyNow
                 <button
                   key={option.key}
                   type="button"
-                  onClick={() => setSelectedDataKey(option.key)}
+                  onClick={() => selectDataKey(option.key)}
                   className={`min-w-20 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors ${
                     selectedDataKey === option.key
                       ? 'border-[#faa61a] bg-[#faa61a] text-white'
@@ -181,7 +202,7 @@ export default function BssPackageSelector({ country, packages, locale, onBuyNow
                   key={days}
                   type="button"
                   disabled={!availableDays.has(days)}
-                  onClick={() => setSelectedDays(String(days))}
+                  onClick={() => selectDays(days)}
                   className={`min-w-14 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors ${
                     selectedDays === String(days)
                       ? 'border-[#faa61a] bg-[#faa61a] text-white'
@@ -204,12 +225,12 @@ export default function BssPackageSelector({ country, packages, locale, onBuyNow
             ) : suggestedPackages.length ? (
               <div className="mt-3 grid max-h-[420px] gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
                 {suggestedPackages.map((pkg) => {
-                  const isSelected = String(pkg.package_id) === String(selectedPackageId);
+                  const isSelected = pkg === selectedPackage;
                   return (
                     <button
                       key={pkg.package_id}
                       type="button"
-                      onClick={() => setSelectedPackageId(String(pkg.package_id))}
+                      onClick={() => setPickedPackageId(String(pkg.package_id))}
                       className={`rounded-xl border p-4 text-left transition-colors ${
                         isSelected ? 'border-[#faa61a] bg-[#fff8ed] ring-1 ring-[#faa61a]' : 'border-[#e5e5e5] bg-white hover:border-[#faa61a]'
                       }`}
@@ -247,13 +268,13 @@ export default function BssPackageSelector({ country, packages, locale, onBuyNow
               </div>
               <div className="mt-5 flex items-end justify-between gap-4 border-t border-[#e8e8e8] pt-4">
                 <div><p className="text-sm text-[#666]">Tổng thanh toán</p><p className="mt-1 text-xs text-[#888]">Giá được xác nhận lại trước khi thanh toán.</p></div>
-                <strong className="text-xl text-[#faa61a]">{isLoadingPrice ? 'Đang tính giá...' : formatPrice(displayTotal, currency, locale)}</strong>
+                <strong aria-busy={isPricing} className={`text-xl text-[#faa61a] transition-opacity ${isPricing ? 'opacity-50' : ''}`}>{formatPrice(displayTotal, currency, locale)}</strong>
               </div>
               {priceError && <p className="mt-3 text-sm text-red-600">{priceError}</p>}
               <button
                 type="button"
                 onClick={() => onBuyNow(selectedPackage, quantity)}
-                disabled={isLoadingPrice || Boolean(priceError) || !Number.isInteger(quantity) || quantity < 1}
+                disabled={isPricing || Boolean(priceError) || !Number.isInteger(quantity) || quantity < 1}
                 className="mt-5 w-full rounded-lg bg-[#faa61a] px-5 py-3 font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Mua ngay
