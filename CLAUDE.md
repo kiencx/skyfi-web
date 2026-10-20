@@ -19,6 +19,8 @@ No test framework is configured — QA is manual.
 
 ## Environment Variables
 
+Env files are not committed. Copy `.env.example` to `.env.local` and fill in the secrets (`BSS_*` credentials, Sentry DSN).
+
 ```bash
 NEXT_PUBLIC_API_BASE_URL=https://bss-api.skyfi.network/api/bss
 BASE_URL_SOCKET=https://bss-api.skyfi.network
