@@ -13,10 +13,13 @@ import {trackProductListView, trackPageView, trackSearch} from "@/app/utils/trac
 
 
 const ArrowRight = () => <span aria-hidden="true" className="text-[22px] leading-none">→</span>;
+const getCountryIsoCode = (country) => String(country.iso_code || country.code || '').trim().toLowerCase();
 const getCountryFlagUrl = (country) => {
-  const isoCode = String(country.iso_code || country.code || '').trim().toLowerCase();
+  const isoCode = getCountryIsoCode(country);
   return isoCode ? `https://flagcdn.com/w160/${isoCode}.png` : null;
 };
+// Square (1:1) flags from flag-icons are redrawn so emblems stay visible in the near-square card slot.
+const FLAG_ICONS_CSS = 'https://cdnjs.cloudflare.com/ajax/libs/flag-icons/7.5.0/css/flag-icons.min.css';
 
 const ReasonIcon = ({ index }) => {
   const iconProps = { width: 42, height: 42, viewBox: '0 0 42 42', fill: 'none', 'aria-hidden': true };
@@ -375,11 +378,10 @@ export default function TravelESimPage() {
               <article className="h-[102px] w-full overflow-hidden bg-white rounded-[22px] border border-[#d6d6d6] shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-[#ed1b2f]/30 group-hover:shadow-[0_8px_18px_rgba(0,0,0,0.09)] flex items-stretch">
                 {item.code && (
                   <div className="w-[32%] shrink-0 overflow-hidden bg-[#f7f7f7]">
-                    <img
-                      src={getCountryFlagUrl(item) || `/assets/flags/${item.code.toLowerCase()}.png`}
-                      alt={item.name}
-                      className="h-full w-full object-cover"
-                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    <span
+                      role="img"
+                      aria-label={item.name}
+                      className={`fi fis fi-${getCountryIsoCode(item)} !block !h-full !w-full ![background-size:cover]`}
                     />
                   </div>
                 )}
@@ -455,6 +457,7 @@ export default function TravelESimPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
+      <link rel="stylesheet" href={FLAG_ICONS_CSS} precedence="default" />
       {viewSrc==="vj"?<HeaderCart/>: <Header />}
 
 
@@ -532,7 +535,7 @@ export default function TravelESimPage() {
         </div>}
 
         {/* Notice and Country Grid */}
-        <section className="bg-[#f7f7f7] py-10 md:py-16">
+        <section className="bg-[#f7f7f7] pt-6 pb-10 md:pt-8 md:pb-16">
         <div className="container">
           <div className="max-w-[760px] mb-8 md:mb-10">
             <h2 className="font-inter font-bold text-[36px] leading-tight text-[#333]">
