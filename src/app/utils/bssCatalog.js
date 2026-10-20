@@ -42,6 +42,14 @@ export const getRegionFlagUrl = (region) => {
   return /^[a-z]{2}$/.test(isoCode) ? `https://flagcdn.com/w160/${isoCode}.png` : null;
 };
 
+// BSS returns image_url relative to its asset host, e.g. "/public/cdn-image/china.jpg".
+export const getBssAssetUrl = (path) => {
+  if (!path) return null;
+  if (/^https?:\/\//i.test(path)) return path;
+  const base = (process.env.NEXT_PUBLIC_BSS_ASSET_BASE_URL || '').replace(/\/+$/, '');
+  return `${base}/${String(path).replace(/^\/+/, '')}`;
+};
+
 const unwrap = (response, fallbackMessage) => {
   if (!response?.data?.success) {
     throw new Error(response?.data?.message || fallbackMessage);
