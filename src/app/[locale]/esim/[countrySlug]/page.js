@@ -11,6 +11,7 @@ import BssPackageSelector from '../../../components/BssPackageSelector';
 import HeaderVJ from "@/app/components/HeaderVJ";
 import HeaderCart from "@/app/components/HeaderCart";
 import useMyEsim from "@/app/hooks/useMyEsim";
+import useTravelEsimTabs from "@/app/hooks/useTravelEsimTabs";
 import { trackPageView, trackBeginCheckout, trackSearch } from "@/app/utils/trackingHelper";
 
 // Placeholder Icons
@@ -100,7 +101,13 @@ export default function CountryESimPlansPage() {
     { id: 'global', label: locale === 'vi' ? 'Toàn cầu' : tbaner('tabGlobal') },
   ];
 
-  const tabHref = (tabId) => `/${locale}/travel-esim/?type=${tabId}&src=${viewSrc}`;
+  const tabBarRef = useRef(null);
+  const { tabHref, onTabClick } = useTravelEsimTabs({
+    src: viewSrc,
+    activeTab,
+    currentHref: `/esim/${countrySlug}?${searchParams.toString()}`,
+    tabBarRef,
+  });
 
   const isTabActive = (tabId) => {
     if (tabId === 'national') {
@@ -352,13 +359,15 @@ export default function CountryESimPlansPage() {
       <main className="w-full flex flex-col items-center">
         {/* Country Title and Plan Grid */}
         <div className="w-full px-4 xl:container xl:px-[90px] py-3 md:py-3 flex flex-col gap-[20px]">
-          <nav aria-label="Loại eSIM" className="inline-flex w-fit items-center gap-2 rounded-2xl bg-[#ddd] p-[6px]">
+          <nav ref={tabBarRef} aria-label="Loại eSIM" className="inline-flex w-fit items-center gap-2 rounded-2xl bg-[#ddd] p-[6px]">
             {tabs.map((tab) => {
               const isActive = isTabActive(tab.id);
               return (
                 <Link
                   key={tab.id}
-                  href={tabHref(tab.id)}
+                  href={`/${locale}${tabHref(tab.id)}`}
+                  scroll={false}
+                  onClick={() => onTabClick(tab.id)}
                   className={`h-10 rounded-[14px] px-4 py-[10px] font-inter text-sm font-semibold leading-5 transition-colors ${
                     isActive
                       ? 'bg-[#faa61a] text-white shadow-[inset_-3px_2px_3.2px_rgba(0,0,0,0.25)]'
