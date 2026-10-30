@@ -1,4 +1,5 @@
 'use client';
+import axios from 'axios';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
@@ -20,15 +21,38 @@ export default function PaymentResult() {
 	const orderId = searchParams.get( 'orderId' );
 	const t = useTranslations( 'payment-result' );
 	const [ dataOrder, setDataOrder ] = useState( {} );
+	const [ orderNotFound, setOrderNotFound ] = useState( false );
 	const load = useLoad();
 	const roueter= useRouter();
 
-
+	// GalaxyPay returns BSS v2 orders to this legacy page too; those orders only exist in BSS v2.
+	const findBssOrder = async ( orderCode ) => {
+		try {
+			const response = await axios.get( `/api/bss/orders/${ encodeURIComponent( orderCode ) }` );
+			return response.data?.success && response.data.data?.order ? response.data.data.order : null;
+		} catch {
+			return null;
+		}
+	};
 
 	const getOrderDetails = async ( orderId ) => {
+		if ( !orderId ) {
+			setOrderNotFound( true );
+			return;
+		}
 		try {
 			load.open()
+			if ( await findBssOrder( orderId ) ) {
+				roueter.replace( `/checkout/bss/result?orderNumber=${ encodeURIComponent( orderId ) }` );
+				return;
+			}
+
 			const orderDetails = await CheckoutService.getOrder( orderId );
+			// getOrder resolves with the Error instead of throwing when the order is missing.
+			if ( !orderDetails?.order ) {
+				setOrderNotFound( true );
+				return;
+			}
 			if(orderDetails?.order?.order_type?.includes("vj_landing_page")) {
 				roueter.push(`/vj2/result?orderId=${orderId}`);
 				return;
@@ -82,6 +106,7 @@ export default function PaymentResult() {
 
 		} catch ( error ) {
 			console.error( error );
+			setOrderNotFound( true );
 
 		} finally {
 			load.close()
@@ -134,7 +159,21 @@ export default function PaymentResult() {
 
 			<div className="container">
 				<div className="max-w-7xl mx-auto min-h-[60vh] py-10 space-y-5 px-4">
-					{!load.loading && dataOrder.status &&
+					{!load.loading && !dataOrder?.status && orderNotFound &&
+					<div role="alert" className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-8 space-y-4 text-center">
+						<h1 className="text-2xl font-bold text-red-600">Không tìm thấy đơn hàng</h1>
+						<p className="text-gray-700">
+							{ orderId ? <>Không tìm thấy thông tin đơn <span className="font-bold">{ orderId }</span>. </> : null }
+							Vui lòng gọi Hotline 1900 6605 để được hỗ trợ.
+						</p>
+						<Link
+							href="/"
+							className="block w-full bg-gradient-to-r from-yellow-500 to-yellow-400 text-white font-bold py-3 px-6 rounded-lg text-center hover:from-yellow-600 hover:to-yellow-500 transition-all"
+						>
+							{ t( 'homeButton' ) }
+						</Link>
+					</div>}
+					{!load.loading && dataOrder?.status &&
 					<div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-8 space-y-6">
 						{/* Logo Section */ }
 						<div className="flex items-center justify-between border-b border-gray-200 pb-4">
