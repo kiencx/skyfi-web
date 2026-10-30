@@ -1,10 +1,16 @@
 import { withSentryConfig } from '@sentry/nextjs';
 /** @type {import('next').NextConfig} */
 import createNextIntlPlugin from 'next-intl/plugin';
+import { fileURLToPath } from 'node:url';
 
 const withNextIntl = createNextIntlPlugin( './src/i18n/request.js' );
 
 const nextConfig = {
+				// The Docker image runs .next/standalone/server.js.
+				output: 'standalone',
+				// Trace from this project so server.js lands at the standalone root even when
+				// a parent directory has its own lockfile.
+				outputFileTracingRoot: fileURLToPath( new URL( '.', import.meta.url ) ),
 				images: {
 								domains: [ 'sandbox.airalo.com', 'uatagent.gigago.com', 'hn.ss.bfcplatform.vn', 'cdn.airalo.com','bss-api.skyfi.network' ],
 				},
