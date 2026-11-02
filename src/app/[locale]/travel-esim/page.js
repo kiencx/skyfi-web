@@ -8,6 +8,7 @@ import Footer from '../../components/Footer';
 import Header from '../../components/Header';
 import HaveEsimSection from '../../components/home/HaveEsimSection';
 import useMyEsim from '../../hooks/useMyEsim';
+import useTravelEsimTabs, { travelEsimListHref } from '../../hooks/useTravelEsimTabs';
 import HeaderCart from "@/app/components/HeaderCart";
 import {trackProductListView, trackPageView, trackSearch} from "@/app/utils/trackingHelper";
 
@@ -134,6 +135,13 @@ export default function TravelESimPage() {
   const [isShowingAllDestinations, setIsShowingAllDestinations] = useState(false);
   const searchInputRef = useRef(null);
   const popoverRef = useRef(null);
+  const tabBarRef = useRef(null);
+  const { tabHref, onTabClick } = useTravelEsimTabs({
+    src: viewSrc,
+    activeTab,
+    currentHref: travelEsimListHref(activeTab, viewSrc),
+    tabBarRef,
+  });
   const { showDevicesEsim } = useMyEsim();
   const copy = pageCopy[locale];
   const showFigmaMarketing = Boolean(copy);
@@ -446,8 +454,6 @@ export default function TravelESimPage() {
     { id: 'global', label: locale === 'vi' && showFigmaMarketing ? 'Toàn cầu' : t('tabGlobal') },
   ];
 
-  const tabHref = (tabId) => `/travel-esim?type=${tabId}&src=${viewSrc}`;
-
   const testimonials = [
     { name: 'Trâm Anh Lê', initials: 'TA', quote: 'Mình đã tin tưởng sử dụng eSIM của Gohub trong đợt đi Úc vừa qua. Tốc độ truy cập Internet cứ phải gọi là rất ổn định luôn. Các bạn nhân viên bên này cũng dễ thương lắm, tư vấn cực kỳ nhiệt tình luôn. 10 điểm luôn á' },
     { name: 'Lê Thanh', initials: 'LT', quote: 'Mình đã tin tưởng sử dụng eSIM của Gohub trong đợt đi Úc vừa qua. Tốc độ truy cập Internet cứ phải gọi là rất ổn định luôn. Các bạn nhân viên bên này cũng dễ thương lắm, tư vấn cực kỳ nhiệt tình luôn. 10 điểm luôn á' },
@@ -516,12 +522,14 @@ export default function TravelESimPage() {
       {/* Main Content Section */}
       <main className="relative z-0 flex flex-col">
         {/* Tabs */}
-        {!showFigmaMarketing && <div className="w-full bg-white border-b border-[#F1F1F1] shadow-sm">
+        {!showFigmaMarketing && <div ref={tabBarRef} className="w-full bg-white border-b border-[#F1F1F1] shadow-sm">
           <div className="px-4 xl:container flex justify-center md:justify-start gap-5 md:gap-10">
             {tabs.map(tab => (
               <Link
                 key={tab.id}
                 href={tabHref(tab.id)}
+                scroll={false}
+                onClick={() => onTabClick(tab.id)}
                 className={`py-[16px] md:py-[20px] font-inter text-sm sm:text-[16px] md:text-[18px] border-b-2 hover:text-[#ED1B2F]
                   ${activeTab === tab.id
                     ? 'border-[#ED1B2F] text-[#ED1B2F] font-semibold'
@@ -543,13 +551,15 @@ export default function TravelESimPage() {
             </h2>
             {showFigmaMarketing && <p className="mt-3 text-[16px] text-[#666]">{copy.popularText}</p>}
             {showFigmaMarketing && (
-              <nav aria-label="Loại eSIM" className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-[#ddd] p-[6px]">
+              <nav ref={tabBarRef} aria-label="Loại eSIM" className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-[#ddd] p-[6px]">
                 {tabs.map(tab => {
                   const isActive = activeTab === tab.id;
                   return (
                     <Link
                       key={tab.id}
                       href={tabHref(tab.id)}
+                      scroll={false}
+                      onClick={() => onTabClick(tab.id)}
                       className={`h-10 rounded-[14px] px-4 py-[10px] font-inter text-sm font-semibold leading-5 transition-colors ${
                         isActive
                           ? 'bg-[#faa61a] text-white shadow-[inset_-3px_2px_3.2px_rgba(0,0,0,0.25)]'
