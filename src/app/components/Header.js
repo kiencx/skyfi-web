@@ -181,7 +181,8 @@ export default function Header() {
           onClick={ handleUserClick }
         >
           { !isLoggedIn ? (
-             <Link href={'/login'} className="flex items-center gap-1">
+             // Same entry as "Truy cập SIM của bạn": email or ICCID login (self-care), not the legacy email-only /login.
+             <Link href={'/login-sim'} className="flex items-center gap-1">
               <Image src="/assets/user-circle.svg" alt="User" width={ 24 } height={ 24 } />
               <span className="hidden xl:inline text-[#333]  font-normal" style={ { fontFamily: 'Inter' } }>
                 { t( 'common.login' ) }
