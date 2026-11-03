@@ -4,7 +4,7 @@ import { resolveBssBrand } from '../_lib/bss-brand';
 
 const FILTER_KEYS = [
   'package_type', 'min_price', 'max_price', 'currency', 'min_data', 'max_data',
-  'data_unit', 'min_validity_days', 'max_validity_days', 'search', 'page', 'limit',
+  'data_unit', 'min_validity_days', 'max_validity_days', 'search', 'data_plan_type', 'page', 'limit',
 ];
 
 export const dynamic = 'force-dynamic';
