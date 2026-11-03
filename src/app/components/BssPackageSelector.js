@@ -1,10 +1,18 @@
 "use client";
 
 import axios from 'axios';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { getBssAssetUrl } from '@/app/utils/bssCatalog';
 
 const MAX_QUANTITY = 50;
+
+// BSS `data_plan_type`; '' shows every package.
+const PLAN_TYPE_CHOICES = [
+  { value: '', label: 'Tất cả' },
+  { value: 'FIXED', label: 'Data tổng' },
+  { value: 'DAILY', label: 'Data hàng ngày' },
+  { value: 'UNLIMITED', label: 'Unlimited' },
+];
 
 const formatPrice = (value, currency = 'VND', locale = 'vi') => new Intl.NumberFormat(locale, {
   style: 'currency',
@@ -29,7 +37,13 @@ const getValidityDays = (pkg) => {
   return Number.isFinite(days) ? days : null;
 };
 
-export default function BssPackageSelector({ country, packages, locale, onBuyNow, brand = 'web' }) {
+export default function BssPackageSelector({
+  country, packages: allPackages, loadPackagesByPlanType, locale, onBuyNow, brand = 'web',
+}) {
+  const [planType, setPlanType] = useState('');
+  const [planPackages, setPlanPackages] = useState(null);
+  const [planError, setPlanError] = useState('');
+  const [isLoadingPlan, setIsLoadingPlan] = useState(false);
   const [pickedDataKey, setPickedDataKey] = useState('');
   const [pickedDays, setPickedDays] = useState('');
   const [pickedPackageId, setPickedPackageId] = useState('');
@@ -44,6 +58,56 @@ export default function BssPackageSelector({ country, packages, locale, onBuyNow
   useEffect(() => {
     setImageFailed(false);
   }, [imageUrl]);
+
+  // Only offer plan types that exist for this destination; an older BSS without
+  // `data_plan_type` returns none, so the filter stays hidden.
+  const planTypeChoices = useMemo(() => {
+    const available = new Set(allPackages.map((pkg) => pkg.data_plan_type).filter(Boolean));
+    return available.size ? PLAN_TYPE_CHOICES.filter((choice) => !choice.value || available.has(choice.value)) : [];
+  }, [allPackages]);
+
+  // The parent recreates the loader on every render; keep the latest one without refetching.
+  const loadPackagesRef = useRef(loadPackagesByPlanType);
+  useEffect(() => {
+    loadPackagesRef.current = loadPackagesByPlanType;
+  }, [loadPackagesByPlanType]);
+
+  useEffect(() => {
+    if (!planType) return undefined;
+    const load = loadPackagesRef.current;
+    if (!load) {
+      setPlanPackages({ planType, items: allPackages.filter((pkg) => pkg.data_plan_type === planType) });
+      setIsLoadingPlan(false);
+      return undefined;
+    }
+
+    let current = true;
+    setIsLoadingPlan(true);
+    setPlanError('');
+    load(planType)
+      .then((items) => {
+        if (current) setPlanPackages({ planType, items });
+      })
+      .catch((error) => {
+        if (current) setPlanError(error.response?.data?.message || error.message || 'Không thể tải gói theo loại đã chọn.');
+      })
+      .finally(() => {
+        if (current) setIsLoadingPlan(false);
+      });
+    return () => { current = false; };
+  }, [planType, allPackages]);
+
+  const packages = useMemo(() => {
+    if (!planType) return allPackages;
+    return planPackages?.planType === planType ? planPackages.items : [];
+  }, [planType, planPackages, allPackages]);
+
+  const selectPlanType = (value) => {
+    setPlanType(value);
+    setPlanError('');
+    setIsLoadingPlan(Boolean(value));
+    setQuantity(1);
+  };
 
   const dataChoices = useMemo(() => {
     const byKey = new Map(packages.map(getDataOption).filter(Boolean).map((option) => [option.key, option]));
@@ -173,6 +237,34 @@ export default function BssPackageSelector({ country, packages, locale, onBuyNow
           <p className="text-sm font-medium text-[#666]">Thiết lập gói eSIM cho {country.name}</p>
           <h2 className="mt-1 text-2xl font-bold text-[#333]">Chọn gói phù hợp với chuyến đi</h2>
 
+          {planTypeChoices.length > 0 && (
+            <fieldset className="mt-7">
+              <legend className="text-base font-bold text-[#333]">Loại gói</legend>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {planTypeChoices.map((choice) => (
+                  <button
+                    key={choice.value || 'ALL'}
+                    type="button"
+                    aria-pressed={planType === choice.value}
+                    onClick={() => selectPlanType(choice.value)}
+                    className={`rounded-lg border px-4 py-2 text-sm font-semibold transition-colors ${
+                      planType === choice.value
+                        ? 'border-[#faa61a] bg-[#faa61a] text-white'
+                        : 'border-[#e0e0e0] bg-white text-[#333] hover:border-[#faa61a]'
+                    }`}
+                  >
+                    {choice.label}
+                  </button>
+                ))}
+              </div>
+              {planError && <p className="mt-3 text-sm text-red-600">{planError}</p>}
+            </fieldset>
+          )}
+
+          {isLoadingPlan ? (
+            <p className="mt-7 text-sm text-[#777]">Đang tải gói eSIM...</p>
+          ) : (
+          <>
           <fieldset className="mt-7">
             <legend className="text-base font-bold text-[#333]">Dung lượng</legend>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -280,6 +372,8 @@ export default function BssPackageSelector({ country, packages, locale, onBuyNow
                 Mua ngay
               </button>
             </div>
+          )}
+          </>
           )}
         </div>
       </div>

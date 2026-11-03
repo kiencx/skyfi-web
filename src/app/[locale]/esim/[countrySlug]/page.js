@@ -186,6 +186,19 @@ export default function CountryESimPlansPage() {
     fetchCountryAndPackages();
   }, [countrySlug, activeTab, locale, tPage, tCommon]);
 
+  // The selector asks for one data plan type (FIXED / DAILY / UNLIMITED) at a time;
+  // BSS filters it server-side via `data_plan_type`.
+  const loadPackagesByPlanType = async (dataPlanType) => {
+    const packageItems = await fetchAllBssPackagePages(new URLSearchParams({
+      limit: '50',
+      page: '1',
+      package_type: 'NEW_ESIM',
+      region_id: String(countryDetails.id),
+      data_plan_type: dataPlanType,
+    }));
+    return packageItems.map((pkg) => adaptPublicV2Package(pkg, countryDetails));
+  };
+
   // Filter countries based on search term for popover
   const filteredCountries = allCountries.filter(country =>
     country.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -417,6 +430,7 @@ export default function CountryESimPlansPage() {
             <BssPackageSelector
               country={countryDetails}
               packages={packages}
+              loadPackagesByPlanType={loadPackagesByPlanType}
               locale={locale}
               onBuyNow={onBuyNowClick}
             />
