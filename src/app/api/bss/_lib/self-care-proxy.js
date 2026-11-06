@@ -1,6 +1,7 @@
 import 'server-only';
 import { NextResponse } from 'next/server';
 import { bssFetch, isBssAuthError } from './bss-auth';
+import { bffMessage, localeHeaders } from './bss-locale';
 
 const SELF_CARE_BASE_PATH = '/api/bss/app/v2/self-care';
 const SESSION_HEADER = 'x-selfcare-session';
@@ -47,7 +48,7 @@ export async function proxySelfCare(request, path, {
   withSession = false,
   mapEsims = false,
 } = {}) {
-  const headers = { Accept: 'application/json' };
+  const headers = { Accept: 'application/json', ...localeHeaders(request) };
 
   const clientIp = getClientIp(request);
   if (clientIp) {
@@ -57,7 +58,7 @@ export async function proxySelfCare(request, path, {
 
   if (withSession) {
     const sessionToken = request.headers.get(SESSION_HEADER);
-    if (!sessionToken) return errorResponse('Missing self-care session.', 401);
+    if (!sessionToken) return errorResponse(bffMessage(request, 'missingSession'), 401);
     headers['X-SelfCare-Session'] = sessionToken;
   }
 
@@ -80,12 +81,12 @@ export async function proxySelfCare(request, path, {
       payload.data.items = payload.data.items.map(toEsimView);
     }
     return noStore(NextResponse.json(
-      payload || { success: false, message: 'Invalid response from BSS API.' },
+      payload || { success: false, message: bffMessage(request, 'invalidResponse') },
       { status: response.status },
     ));
   } catch (error) {
-    if (isBssAuthError(error)) return errorResponse(error.message, error.status);
-    return errorResponse('Unable to reach BSS API.', 502);
+    if (isBssAuthError(error)) return errorResponse(bffMessage(request, 'unavailable'), error.status);
+    return errorResponse(bffMessage(request, 'unreachable'), 502);
   }
 }
 

@@ -1,6 +1,6 @@
 "use client";
 import axios from 'axios'; // Import axios
-import { useLocale, useTranslations } from 'next-intl';
+import { useLocale, useMessages, useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from '../../../i18n/navigation';
@@ -11,6 +11,7 @@ import useMyEsim from '../../hooks/useMyEsim';
 import useTravelEsimTabs, { travelEsimListHref } from '../../hooks/useTravelEsimTabs';
 import HeaderCart from "@/app/components/HeaderCart";
 import {trackProductListView, trackPageView, trackSearch} from "@/app/utils/trackingHelper";
+import { bssLocaleHeaders } from '@/app/utils/bssLocale';
 
 
 const ArrowRight = () => <span aria-hidden="true" className="text-[22px] leading-none">→</span>;
@@ -38,90 +39,19 @@ const ReasonIcon = ({ index }) => {
   return <svg {...iconProps}>{circle}<path d="M12 13.628L21.0045 11L30 13.628V19.017C29.9996 21.7788 29.1304 24.4704 27.5154 26.7108C25.9004 28.9512 23.6216 30.6267 21.0015 31.5C18.3805 30.627 16.1006 28.9514 14.4851 26.7105C12.8695 24.4696 12 21.7771 12 19.0145V13.628Z" fill="#FAA61A" /><path d="M16.5 20.5L20 24L26 18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 };
 
-const pageCopy = {
-  vi: {
-    eyebrow: 'Kết nối muôn nơi, mua SIM giá hời',
-    heroTitle: 'eSIM QUỐC TẾ -',
-    heroHighlight: 'TIẾT KIỆM 80%',
-    popularTitle: 'Dữ liệu nhanh nhất,',
-    popularHighlight: 'Giá tốt nhất',
-    popularText: 'Kết nối ngay lập tức ở hơn 200 điểm đến',
-    showAll: 'Xem thêm',
-    showLess: 'Thu gọn danh sách',
-    howTitle: 'eSIM SkyFi hoạt động như thế nào?',
-    whyTitle: 'Vì sao chọn SkyFi',
-    appTitle: 'Tải ứng dụng SkyFi',
-    appText: 'Quản lý eSIM, theo dõi dung lượng và kết nối mọi hành trình chỉ với vài thao tác.',
-    steps: [
-      ['Chọn điểm đến & thời gian sử dụng', 'Chọn quốc gia bạn đến và số ngày cần dùng eSIM. Đừng quên kiểm tra thiết bị của bạn có hỗ trợ eSIM không trước khi mua.'],
-      ['Nhận eSIM ngay lập tức', 'Mã QR hoặc mã cài đặt thủ công sẽ được gửi vào email của bạn. Cài đặt nhanh chóng, chỉ cần quét mã là xong.'],
-      ['Kích hoạt & tận hưởng chuyến đi', 'Cài đặt eSIM trước chuyến đi và kích hoạt dữ liệu khi bạn đến nơi để luôn giữ kết nối suôn sẻ.'],
-    ],
-    reasons: [
-      {
-        title: 'Nhanh – Tiện lợi – Chi phí hợp lý',
-        points: [
-          'Du lịch quốc tế bắt đầu chỉ từ 25.000 VND, tiết kiệm tới 80% so với Roaming truyền thống.',
-          'Dễ dàng chọn SIM phù hợp cho nhiều thiết bị.',
-          'eSIM: Nhận mã QR qua email, quét và cài đặt trong vòng 02 phút để bắt đầu sử dụng ngay lập tức.',
-          'SIM vật lý: Giao hàng nhanh toàn quốc, tương thích với tất cả các thiết bị.',
-        ],
-      },
-      {
-        title: 'Kết nối toàn cầu, ổn định mọi nơi',
-        points: [
-          'Dữ liệu nhanh nhất.',
-          'Hạ tầng mạng hàng đầu thế giới đảm bảo kết nối ổn định mọi lúc, mọi nơi.',
-          'Gói cước linh hoạt và đa dạng đáp ứng mọi nhu cầu du lịch của bạn.',
-        ],
-      },
-      {
-        title: 'Hỗ trợ khách hàng 24/7',
-        points: [
-          'Đội ngũ Chăm sóc Khách hàng của chúng tôi luôn sẵn sàng 24/7 trong suốt hành trình của bạn.',
-          'Hỗ trợ qua nhiều kênh như Hotline, Zalo OA và WhatsApp.',
-        ],
-      },
-      {
-        title: 'Chính sách ưu tiên khách hàng',
-        points: [
-          'Hoàn tiền 100% nếu sản phẩm bị lỗi.',
-          'Cam kết mang lại sự an tâm tuyệt đối và trải nghiệm dịch vụ minh bạch, tin cậy.',
-        ],
-      },
-    ],
-  },
-  en: {
-    eyebrow: 'STAY CONNECTED ANYWHERE',
-    heroTitle: 'INTERNATIONAL eSIM',
-    heroHighlight: 'SAVE UP TO 80%',
-    popularTitle: 'Fastest data,',
-    popularHighlight: 'Best price',
-    popularText: 'Choose where you are travelling to and explore suitable eSIM plans.',
-    showAll: 'View more',
-    showLess: 'Show fewer destinations',
-    howTitle: 'How does SkyFi eSIM work?',
-    whyTitle: 'Why choose SkyFi',
-    appTitle: 'Download the SkyFi app',
-    appText: 'Manage eSIMs, track data, and stay connected throughout every journey.',
-    steps: [
-      ['Choose a destination', 'Find your destination and select a suitable data plan.'],
-      ['Receive your eSIM', 'Your eSIM QR code is sent straight to your email after payment.'],
-      ['Connect instantly', 'Scan the QR code, turn on mobile data, and begin your trip.'],
-    ],
-    reasons: [
-      { title: 'Fast, convenient, and fairly priced', points: ['Buy and activate eSIM plans in minutes.'] },
-      { title: 'Global, reliable connectivity', points: ['Stay connected across destinations worldwide.'] },
-      { title: '24/7 customer support', points: ['Our support team is ready to help throughout your journey.'] },
-      { title: 'Customer-first policy', points: ['Transparent service and reliable support.'] },
-    ],
-  },
-};
+// Price label on destination cards: Vietnamese keeps the familiar "25.000đ" style.
+const formatFromPrice = (price, locale, currency = 'VND') => (
+  locale === 'vi' && currency === 'VND'
+    ? `${price.toLocaleString('vi-VN')}đ`
+    : new Intl.NumberFormat(locale, { style: 'currency', currency, maximumFractionDigits: currency === 'VND' ? 0 : 2 }).format(price)
+);
 
 export default function TravelESimPage() {
   const locale = useLocale();
   const t = useTranslations('travelESimPage');
   const tPage = useTranslations('countryEsimPage');
+  const tFlow = useTranslations('travelEsimFlow');
+  const messages = useMessages();
   const searchParams = useSearchParams();
   const typeParam = searchParams.get('type') || 'national'; // Default to 'national' if no query param
   const viewSrc = searchParams.get( 'src' ) || 'skyfi';
@@ -143,7 +73,8 @@ export default function TravelESimPage() {
     tabBarRef,
   });
   const { showDevicesEsim } = useMyEsim();
-  const copy = pageCopy[locale];
+  // The marketing layout only exists for locales that ship travelEsimFlow.marketing (vi, en).
+  const copy = messages.travelEsimFlow?.marketing;
   const showFigmaMarketing = Boolean(copy);
 
   useEffect(() => {
@@ -168,7 +99,7 @@ export default function TravelESimPage() {
         // All destination tabs use Public v2 through the BFF so the JWT never
         // reaches the browser. The BFF forwards the required channel=BSS.
         const apiUrl = `/api/bss/regions?type=${apiType}&channel=BSS`;
-        const response = await axios.get(apiUrl);
+        const response = await axios.get(apiUrl, { headers: bssLocaleHeaders(locale) });
         const publicV2Regions = Array.isArray(response.data?.data)
           ? response.data.data
           : response.data?.data?.items;
@@ -193,7 +124,7 @@ export default function TravelESimPage() {
     };
 
     fetchDataForTab();
-  }, [activeTab]);
+  }, [activeTab, locale]);
 
   useEffect(() => {
     if (!showFigmaMarketing || activeTab !== 'national' || fetchedData.length === 0) {
@@ -213,7 +144,7 @@ export default function TravelESimPage() {
             : Number(country.min_price);
           if (!Number.isFinite(price)) return null;
 
-          return [country.id, `${price.toLocaleString('vi-VN')}đ`];
+          return [country.id, formatFromPrice(price, locale)];
         })
         .filter(Boolean),
     );
@@ -243,10 +174,7 @@ export default function TravelESimPage() {
 
           const price = Number(lowestPackage.selling_price);
           const currency = String(lowestPackage.currency || 'VND').toUpperCase();
-          const label = currency === 'VND'
-            ? `${price.toLocaleString('vi-VN')}đ`
-            : new Intl.NumberFormat(locale, { style: 'currency', currency }).format(price);
-          return [country.id, label];
+          return [country.id, formatFromPrice(price, locale, currency)];
         } catch {
           return [country.id, null];
         }
@@ -397,7 +325,7 @@ export default function TravelESimPage() {
                   <h3 className="font-inter font-bold text-[16px] leading-tight text-[#333] line-clamp-1 md:text-[18px]">{item.name}</h3>
                   {countryPrices[item.id] && (
                     <p className="mt-1 font-inter text-[16px] font-semibold leading-tight text-[#333] md:text-[18px]">
-                      Từ: <span className="text-[#ed1b2f]">{countryPrices[item.id]}</span>
+                      {copy.priceFrom} <span className="text-[#ed1b2f]">{countryPrices[item.id]}</span>
                     </p>
                   )}
                 </div>
@@ -449,17 +377,12 @@ export default function TravelESimPage() {
   }
 
   const tabs = [
-    { id: 'national', label: locale === 'vi' && showFigmaMarketing ? 'Danh sách quốc gia' : t('tabNational') },
-    { id: 'regional', label: locale === 'vi' && showFigmaMarketing ? 'Khu vực' : t('tabRegional') },
-    { id: 'global', label: locale === 'vi' && showFigmaMarketing ? 'Toàn cầu' : t('tabGlobal') },
+    { id: 'national', label: tFlow('tabs.national') },
+    { id: 'regional', label: tFlow('tabs.regional') },
+    { id: 'global', label: tFlow('tabs.global') },
   ];
 
-  const testimonials = [
-    { name: 'Trâm Anh Lê', initials: 'TA', quote: 'Mình đã tin tưởng sử dụng eSIM của Gohub trong đợt đi Úc vừa qua. Tốc độ truy cập Internet cứ phải gọi là rất ổn định luôn. Các bạn nhân viên bên này cũng dễ thương lắm, tư vấn cực kỳ nhiệt tình luôn. 10 điểm luôn á' },
-    { name: 'Lê Thanh', initials: 'LT', quote: 'Mình đã tin tưởng sử dụng eSIM của Gohub trong đợt đi Úc vừa qua. Tốc độ truy cập Internet cứ phải gọi là rất ổn định luôn. Các bạn nhân viên bên này cũng dễ thương lắm, tư vấn cực kỳ nhiệt tình luôn. 10 điểm luôn á' },
-    { name: 'Nguyễn Thị Mai', initials: 'NM', quote: 'Mình đã tin tưởng sử dụng eSIM của Gohub trong đợt đi Úc vừa qua. Tốc độ truy cập Internet cứ phải gọi là rất ổn định luôn. Các bạn nhân viên bên này cũng dễ thương lắm, tư vấn cực kỳ nhiệt tình luôn. 10 điểm luôn á' },
-    { name: 'William', initials: 'W', quote: 'Mình đã tin tưởng sử dụng eSIM của Gohub trong đợt đi Úc vừa qua. Tốc độ truy cập Internet cứ phải gọi là rất ổn định luôn. Các bạn nhân viên bên này cũng dễ thương lắm, tư vấn cực kỳ nhiệt tình luôn. 10 điểm luôn á' },
-  ];
+  const testimonials = copy?.testimonials || [];
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -551,7 +474,7 @@ export default function TravelESimPage() {
             </h2>
             {showFigmaMarketing && <p className="mt-3 text-[16px] text-[#666]">{copy.popularText}</p>}
             {showFigmaMarketing && (
-              <nav ref={tabBarRef} aria-label="Loại eSIM" className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-[#ddd] p-[6px]">
+              <nav ref={tabBarRef} aria-label={tFlow('tabs.ariaLabel')} className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-[#ddd] p-[6px]">
                 {tabs.map(tab => {
                   const isActive = activeTab === tab.id;
                   return (
@@ -620,10 +543,10 @@ export default function TravelESimPage() {
         <section className="bg-white py-12 md:py-20">
           <div className="container">
             <h2 className="font-inter text-left text-[36px] font-bold leading-tight text-[#333]">
-              {locale === 'vi' ? <>eSIM SkyFi <span className="text-[#ED1B2F]">hoạt động như thế nào?</span></> : copy.howTitle}
+              {copy.howTitle} <span className="text-[#ED1B2F]">{copy.howHighlight}</span>
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-7 mt-9 md:mt-12">
-              {copy.steps.map(([title, description], index) => (
+              {copy.steps.map(({ title, description }, index) => (
                 <article key={title} className="rounded-2xl border border-[#ededed] p-6 md:p-7 shadow-[0_5px_18px_rgba(0,0,0,.05)]">
                   <img
                     src={`/assets/images/active_img_${index + 1}.png`}
@@ -641,7 +564,7 @@ export default function TravelESimPage() {
         <section className="bg-[#f7f7f7] py-12 md:py-20">
           <div className="container">
             <h2 className="font-inter text-left text-[36px] font-bold leading-tight text-[#333]">
-              {locale === 'vi' ? <>Vì sao chọn <span className="text-[#ED1B2F]">SkyFi</span></> : copy.whyTitle}
+              {copy.whyTitle} <span className="text-[#ED1B2F]">{copy.whyHighlight}</span>
             </h2>
             <div className="mt-9 grid grid-cols-1 gap-5 md:mt-12 md:grid-cols-2 md:gap-8">
               {copy.reasons.map((reason, index) => (
@@ -663,15 +586,15 @@ export default function TravelESimPage() {
           <div className="mx-auto w-full max-w-[1240px]">
             <img
               src="/assets/images/people_bg.png"
-              alt="Khách hàng SkyFi kết nối trong mọi hành trình"
+              alt={copy.customersAlt}
               className="h-auto w-full"
             />
           </div>
           <div className="container mt-12 md:mt-16">
             <div className="text-center">
               <h2 className="font-inter text-[32px] font-bold leading-tight text-[#111] md:text-[48px]">
-                1000++ khách hàng toàn cầu<br />
-                <span className="text-[#ED1B2F]">đã tin dùng SkyFI từ 2024</span>
+                {copy.customersCount}<br />
+                <span className="text-[#ED1B2F]">{copy.customersSince}</span>
               </h2>
             </div>
             <div className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-4">
@@ -686,7 +609,7 @@ export default function TravelESimPage() {
                     </span>
                     <div className="leading-tight text-[#111]">
                       <p className="font-inter text-[16px] font-bold">{testimonial.name}</p>
-                      <p className="mt-1 text-[16px]">Khách hàng SkyFi</p>
+                      <p className="mt-1 text-[16px]">{copy.customerLabel}</p>
                     </div>
                   </div>
                 </article>
@@ -699,7 +622,7 @@ export default function TravelESimPage() {
           <div className="container">
             <img
               src="/assets/images/download_bg.png"
-              alt="Tải ứng dụng SkyFi"
+              alt={copy.appTitle}
               className="h-auto w-full"
             />
           </div>

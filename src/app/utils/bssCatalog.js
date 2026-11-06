@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { bssLocaleHeaders } from '@/app/utils/bssLocale';
 
 // Shared client helpers for the BSS Public API v2 flow. Everything goes through
 // the Next.js BFF (`/api/bss/*`), so no partner credential reaches the browser.
@@ -63,7 +64,7 @@ export const getRequestErrorMessage = (error, fallback) => (
 
 export async function fetchBssRegions({ type, brand = BSS_BRANDS.WEB }) {
   if (!type) return [];
-  const response = await axios.get('/api/bss/regions', { params: { type, brand } });
+  const response = await axios.get('/api/bss/regions', { headers: bssLocaleHeaders(), params: { type, brand } });
   const data = unwrap(response, 'Không thể tải danh sách điểm đến.');
   return Array.isArray(data) ? data : (Array.isArray(data?.items) ? data.items : []);
 }
@@ -75,6 +76,7 @@ export async function fetchAllBssPackages({
   limit = 50,
 }) {
   const request = (page) => axios.get('/api/bss/packages', {
+    headers: bssLocaleHeaders(),
     params: { region_id: regionId, package_type: packageType, brand, limit, page },
   });
 
@@ -96,6 +98,7 @@ export async function fetchAllBssPackages({
 
 export async function fetchBssPackagePrice({ packageId, quantity, brand = BSS_BRANDS.WEB }) {
   const response = await axios.get(`/api/bss/packages/${packageId}/price`, {
+    headers: bssLocaleHeaders(),
     params: { quantity, brand },
   });
   return unwrap(response, 'Không thể kiểm tra giá gói.');
@@ -105,7 +108,7 @@ export async function createBssOrder({ order, brand = BSS_BRANDS.WEB, idempotenc
   const response = await axios.post(
     '/api/bss/orders',
     { ...order, brand },
-    { headers: { 'Idempotency-Key': idempotencyKey } },
+    { headers: { ...bssLocaleHeaders(), 'Idempotency-Key': idempotencyKey } },
   );
   const data = unwrap(response, 'Không thể tạo đơn hàng.');
   if (!data?.order_number) throw new Error('Không thể tạo đơn hàng.');
@@ -114,6 +117,7 @@ export async function createBssOrder({ order, brand = BSS_BRANDS.WEB, idempotenc
 
 export async function fetchBssOrder(orderCode, brand = BSS_BRANDS.WEB) {
   const response = await axios.get(`/api/bss/orders/${encodeURIComponent(orderCode)}`, {
+    headers: bssLocaleHeaders(),
     params: { brand },
   });
   return unwrap(response, 'Không thể kiểm tra đơn hàng.')?.order || null;
@@ -125,7 +129,7 @@ export async function createBssWebviewOrder({ order, brand, idempotencyKey }) {
   const response = await axios.post(
     '/api/bss/webview-orders',
     { ...order, brand },
-    { headers: { 'Idempotency-Key': idempotencyKey } },
+    { headers: { ...bssLocaleHeaders(), 'Idempotency-Key': idempotencyKey } },
   );
   const data = unwrap(response, 'Không thể tạo đơn hàng.');
   if (!data?.bill_id) throw new Error('Không thể tạo đơn hàng.');
@@ -149,6 +153,7 @@ export const postVikkiPaymentMessage = ({ action, bill_id: billId, url_callback:
 
 export async function fetchBssBill(billId, brand) {
   const response = await axios.get(`/api/bss/bills/${encodeURIComponent(billId)}`, {
+    headers: bssLocaleHeaders(),
     params: { brand },
   });
   return unwrap(response, 'Không thể kiểm tra hóa đơn.');

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { bssFetch, isBssAuthError } from '../_lib/bss-auth';
+import { bffMessage, localeHeaders } from '../_lib/bss-locale';
 import { resolveBssBrand } from '../_lib/bss-brand';
 
 const FILTER_KEYS = [
@@ -16,7 +17,7 @@ export async function GET(request) {
 
   if ((!countryCode && !regionId) || (countryCode && regionId)) {
     return NextResponse.json(
-      { success: false, message: 'Provide exactly one of country_code or region_id.' },
+      { success: false, message: bffMessage(request, 'countryOrRegion') },
       { status: 400 },
     );
   }
@@ -33,21 +34,21 @@ export async function GET(request) {
   try {
     const response = await bssFetch(
       `/api/bss/app/v2/public/packages?${query.toString()}`,
-      { cache: 'no-store' },
+      { cache: 'no-store', headers: localeHeaders(request) },
       { account },
     );
     const payload = await response.json().catch(() => null);
 
     return NextResponse.json(
-      payload || { success: false, message: 'Invalid response from BSS API.' },
+      payload || { success: false, message: bffMessage(request, 'invalidResponse') },
       { status: response.status },
     );
   } catch (error) {
     if (isBssAuthError(error)) {
-      return NextResponse.json({ success: false, message: error.message }, { status: error.status });
+      return NextResponse.json({ success: false, message: bffMessage(request, 'unavailable') }, { status: error.status });
     }
     return NextResponse.json(
-      { success: false, message: 'Unable to reach BSS API.' },
+      { success: false, message: bffMessage(request, 'unreachable') },
       { status: 502 },
     );
   }
