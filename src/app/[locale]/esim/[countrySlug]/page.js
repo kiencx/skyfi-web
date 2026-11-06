@@ -13,6 +13,7 @@ import HeaderCart from "@/app/components/HeaderCart";
 import useMyEsim from "@/app/hooks/useMyEsim";
 import useTravelEsimTabs from "@/app/hooks/useTravelEsimTabs";
 import { trackPageView, trackBeginCheckout, trackSearch } from "@/app/utils/trackingHelper";
+import { bssLocaleHeaders } from '@/app/utils/bssLocale';
 
 // Placeholder Icons
 const SearchIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
@@ -43,10 +44,11 @@ const adaptPublicV2Package = (pkg, country) => ({
 
 const getRegionTypeForTab = (tab) => ({ national: 'COUNTRY', regional: 'REGION', global: 'GLOBAL' }[tab]);
 
-const fetchAllBssPackagePages = async (packageQuery) => {
-  const firstResponse = await axios.get(`/api/bss/packages?${packageQuery.toString()}`);
+const fetchAllBssPackagePages = async (packageQuery, { locale, fallbackError }) => {
+  const headers = bssLocaleHeaders(locale);
+  const firstResponse = await axios.get(`/api/bss/packages?${packageQuery.toString()}`, { headers });
   if (!firstResponse.data?.success || !Array.isArray(firstResponse.data.data?.items)) {
-    throw new Error(firstResponse.data?.message || 'Không thể tải danh sách gói eSIM.');
+    throw new Error(firstResponse.data?.message || fallbackError);
   }
 
   const firstPage = firstResponse.data.data;
@@ -55,7 +57,7 @@ const fetchAllBssPackagePages = async (packageQuery) => {
     ? await Promise.all(Array.from({ length: totalPages - 1 }, (_, index) => {
       const pageQuery = new URLSearchParams(packageQuery);
       pageQuery.set('page', String(index + 2));
-      return axios.get(`/api/bss/packages?${pageQuery.toString()}`);
+      return axios.get(`/api/bss/packages?${pageQuery.toString()}`, { headers });
     }))
     : [];
 
@@ -94,11 +96,12 @@ export default function CountryESimPlansPage() {
   const tPage = useTranslations('countryEsimPage');
   const tCommon = useTranslations( 'common' );
   const tbaner = useTranslations('travelESimPage');
+  const tFlow = useTranslations('travelEsimFlow');
 
   const tabs = [
-    { id: 'national', label: locale === 'vi' ? 'Danh sách quốc gia' : tbaner('tabNational') },
-    { id: 'regional', label: locale === 'vi' ? 'Khu vực' : tbaner('tabRegional') },
-    { id: 'global', label: locale === 'vi' ? 'Toàn cầu' : tbaner('tabGlobal') },
+    { id: 'national', label: tFlow('tabs.national') },
+    { id: 'regional', label: tFlow('tabs.regional') },
+    { id: 'global', label: tFlow('tabs.global') },
   ];
 
   const tabBarRef = useRef(null);
@@ -144,7 +147,9 @@ export default function CountryESimPlansPage() {
       try {
         // 1. Fetch the selected country, region, or global destination through
         // the BFF so the Public v2 JWT remains server-only.
-        const countriesResponse = await axios.get(`/api/bss/regions?type=${regionType}&channel=BSS`);
+        const countriesResponse = await axios.get(`/api/bss/regions?type=${regionType}&channel=BSS`, {
+          headers: bssLocaleHeaders(locale),
+        });
 
         let foundCountry = null;
         if (countriesResponse.data?.success && Array.isArray(countriesResponse.data.data)) {
@@ -155,7 +160,7 @@ export default function CountryESimPlansPage() {
             String(country.code || country.id).toLowerCase() === countrySlug.toLowerCase(),
           );
         } else {
-          throw new Error(countriesResponse.data.message || 'Không thể tải danh sách quốc gia hoặc định dạng không hợp lệ');
+          throw new Error(countriesResponse.data.message || tFlow('loadDestinationsFailed'));
         }
         console.log("Quốc gia tìm thấy:", foundCountry);
 
@@ -170,21 +175,21 @@ export default function CountryESimPlansPage() {
           page: '1',
           package_type: 'NEW_ESIM',
           region_id: String(foundCountry.id),
-        }));
+        }), { locale, fallbackError: tFlow('loadPackagesFailed') });
         setPackages(packageItems.map((pkg) => adaptPublicV2Package(pkg, foundCountry)));
         setCountryDetails(foundCountry);
 
       } catch (err) {
         console.error("Lỗi khi tải dữ liệu eSIM quốc gia cho slug:", countrySlug, err);
         // Use tCommon for generic error messages
-        setError(err.response?.data?.message || err.message || tCommon('errorFetchingData'));
+        setError(err.response?.data?.message || err.message || tFlow('loadPackagesFailed'));
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchCountryAndPackages();
-  }, [countrySlug, activeTab, locale, tPage, tCommon]);
+  }, [countrySlug, activeTab, locale, tPage, tFlow]);
 
   // The selector asks for one data plan type (FIXED / DAILY / UNLIMITED) at a time;
   // BSS filters it server-side via `data_plan_type`.
@@ -195,7 +200,7 @@ export default function CountryESimPlansPage() {
       package_type: 'NEW_ESIM',
       region_id: String(countryDetails.id),
       data_plan_type: dataPlanType,
-    }));
+    }), { locale, fallbackError: tFlow('loadPackagesFailed') });
     return packageItems.map((pkg) => adaptPublicV2Package(pkg, countryDetails));
   };
 
@@ -372,7 +377,7 @@ export default function CountryESimPlansPage() {
       <main className="w-full flex flex-col items-center">
         {/* Country Title and Plan Grid */}
         <div className="w-full px-4 xl:container xl:px-[90px] py-3 md:py-3 flex flex-col gap-[20px]">
-          <nav ref={tabBarRef} aria-label="Loại eSIM" className="inline-flex w-fit items-center gap-2 rounded-2xl bg-[#ddd] p-[6px]">
+          <nav ref={tabBarRef} aria-label={tFlow('tabs.ariaLabel')} className="inline-flex w-fit items-center gap-2 rounded-2xl bg-[#ddd] p-[6px]">
             {tabs.map((tab) => {
               const isActive = isTabActive(tab.id);
               return (
@@ -422,7 +427,7 @@ export default function CountryESimPlansPage() {
           )}
           {error && (
              <div className="text-center py-[40px] text-[18px] text-red-600 bg-red-100 p-4 rounded-md">
-              <p>{tCommon('errorOccurred')}: {error}</p>
+              <p>{tFlow('errorWithDetail', { error })}</p>
             </div>
           )}
 

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { bssLocaleHeaders } from '@/app/utils/bssLocale';
 
 const BASE_PATH = '/api/bss/self-care';
 const ACCESS_STORAGE_KEY = 'selfCareAccess';
@@ -18,7 +19,10 @@ const request = async (method, path, { data, sessionToken } = {}) => {
       method,
       url: `${BASE_PATH}${path}`,
       data,
-      headers: sessionToken ? { 'X-SelfCare-Session': sessionToken } : undefined,
+      headers: {
+        ...bssLocaleHeaders(),
+        ...(sessionToken ? { 'X-SelfCare-Session': sessionToken } : {}),
+      },
       validateStatus: () => true,
     });
   } catch {

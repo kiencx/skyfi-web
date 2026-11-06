@@ -20,6 +20,7 @@ export default function PaymentResult() {
 	const searchParams = useSearchParams();
 	const orderId = searchParams.get( 'orderId' );
 	const t = useTranslations( 'payment-result' );
+	const tFlow = useTranslations( 'travelEsimFlow.paymentResult' );
 	const [ dataOrder, setDataOrder ] = useState( {} );
 	const [ orderNotFound, setOrderNotFound ] = useState( false );
 	const load = useLoad();
@@ -121,18 +122,6 @@ export default function PaymentResult() {
 
 
 
-	const getStatusText = ( status ) => {
-		const statusMap = {
-			'CREATED': 'Đã tạo',
-			'PAID': 'Đã thanh toán',
-			'COMPLETE': 'Hoàn thành',
-			'CANCEL': 'Hủy',
-			'SHIPPING': 'Chuyển đơn vận',
-			'PROCESSING': 'Đang xử lý'
-		};
-
-		return statusMap[ status ] || status;
-	};
     const renderHeader=()=>{
         if(!dataOrder?.created_from){
             return <HeaderCart/>
@@ -161,10 +150,10 @@ export default function PaymentResult() {
 				<div className="max-w-7xl mx-auto min-h-[60vh] py-10 space-y-5 px-4">
 					{!load.loading && !dataOrder?.status && orderNotFound &&
 					<div role="alert" className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-8 space-y-4 text-center">
-						<h1 className="text-2xl font-bold text-red-600">Không tìm thấy đơn hàng</h1>
+						<h1 className="text-2xl font-bold text-red-600">{ tFlow( 'notFoundTitle' ) }</h1>
 						<p className="text-gray-700">
-							{ orderId ? <>Không tìm thấy thông tin đơn <span className="font-bold">{ orderId }</span>. </> : null }
-							Vui lòng gọi Hotline 1900 6605 để được hỗ trợ.
+							{ orderId ? <>{ tFlow.rich( 'notFoundOrder', { orderId, bold: ( chunks ) => <span className="font-bold">{ chunks }</span> } ) } </> : null }
+							{ tFlow( 'hotline' ) }
 						</p>
 						<Link
 							href="/"
@@ -180,7 +169,7 @@ export default function PaymentResult() {
 							<div className="flex items-center space-x-2">
 								<Image
 									src="/assets/logoWithVietJet.svg"
-									alt="SkyFi Logo"
+									alt={ tFlow( 'logoAlt' ) }
 									width={ 120 }
 									height={ 40 }
 									className="h-10 w-auto"

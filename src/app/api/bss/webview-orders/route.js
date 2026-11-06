@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { bssFetch, isBssAuthError } from '../_lib/bss-auth';
+import { bffMessage, localeHeaders } from '../_lib/bss-locale';
 import { resolveBssBrand } from '../_lib/bss-brand';
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +17,7 @@ export async function POST(request) {
   const body = await request.json().catch(() => null);
   const brandKey = String(body?.brand || '').toLowerCase();
   if (!WEBVIEW_BRANDS.has(brandKey)) {
-    return NextResponse.json({ success: false, message: 'Unsupported brand.' }, { status: 400 });
+    return NextResponse.json({ success: false, message: bffMessage(request, 'unsupportedBrand') }, { status: 400 });
   }
 
   const customerName = String(body?.customer_name || '').trim();
@@ -28,7 +29,7 @@ export async function POST(request) {
       (email && !/^\S+@\S+\.\S+$/.test(email)) || !items.length ||
       items.some((item) => !Number.isInteger(item.package_id) || item.package_id <= 0 ||
         !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 100)) {
-    return NextResponse.json({ success: false, message: 'Invalid checkout information.' }, { status: 400 });
+    return NextResponse.json({ success: false, message: bffMessage(request, 'invalidCheckout') }, { status: 400 });
   }
 
   const { account, source, touchpoint, paymentMethod } = resolveBssBrand(brandKey);
@@ -50,6 +51,7 @@ export async function POST(request) {
     const response = await bssFetch('/api/bss/app/v2/public/create-order-webview', {
       method: 'POST',
       headers: {
+        ...localeHeaders(request),
         'Content-Type': 'application/json',
         'Idempotency-Key': idempotencyKey,
       },
@@ -74,8 +76,8 @@ export async function POST(request) {
     return result;
   } catch (error) {
     if (isBssAuthError(error)) {
-      return NextResponse.json({ success: false, message: error.message }, { status: error.status });
+      return NextResponse.json({ success: false, message: bffMessage(request, 'unavailable') }, { status: error.status });
     }
-    return NextResponse.json({ success: false, message: 'Unable to reach BSS API.' }, { status: 502 });
+    return NextResponse.json({ success: false, message: bffMessage(request, 'unreachable') }, { status: 502 });
   }
 }

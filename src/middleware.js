@@ -1,7 +1,8 @@
 import createMiddleware from 'next-intl/middleware';
+import { NextResponse } from 'next/server';
 import { defaultLocale, locales } from './i18n';
 
-export default createMiddleware({
+const intlMiddleware = createMiddleware({
   // A list of all locales that are supported
   locales,
 
@@ -11,6 +12,30 @@ export default createMiddleware({
   // For SEO purposes, you might want to use the Accept-Language header
   localeDetection: true
 });
+
+const hasLocalePrefix = (pathname) => locales.some(
+  (locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`),
+);
+
+// GalaxyPay returns to the configured `/checkout/result` URL (no locale segment) and appends
+// `language=<vi|en>` from the order. Honour it so a customer who paid in English lands on the
+// English result page instead of the cookie/default locale.
+const paymentReturnLocale = (request) => {
+  const { pathname, searchParams } = request.nextUrl;
+  if (!pathname.startsWith('/checkout/') || hasLocalePrefix(pathname)) return null;
+  const language = searchParams.get('language');
+  return locales.includes(language) ? language : null;
+};
+
+export default function middleware(request) {
+  const locale = paymentReturnLocale(request);
+  if (locale) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${locale}${request.nextUrl.pathname}`;
+    return NextResponse.redirect(url);
+  }
+  return intlMiddleware(request);
+}
 
 
 

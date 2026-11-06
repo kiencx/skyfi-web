@@ -1,17 +1,19 @@
 "use client";
 
 import axios from 'axios';
+import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getBssAssetUrl } from '@/app/utils/bssCatalog';
+import { bssLocaleHeaders } from '@/app/utils/bssLocale';
 
 const MAX_QUANTITY = 50;
 
-// BSS `data_plan_type`; '' shows every package.
+// BSS `data_plan_type`; '' shows every package. Labels are message keys under travelEsimFlow.selector.
 const PLAN_TYPE_CHOICES = [
-  { value: '', label: 'Tất cả' },
-  { value: 'FIXED', label: 'Data tổng' },
-  { value: 'DAILY', label: 'Data hàng ngày' },
-  { value: 'UNLIMITED', label: 'Unlimited' },
+  { value: '', labelKey: 'planAll' },
+  { value: 'FIXED', labelKey: 'planFixed' },
+  { value: 'DAILY', labelKey: 'planDaily' },
+  { value: 'UNLIMITED', labelKey: 'planUnlimited' },
 ];
 
 const formatPrice = (value, currency = 'VND', locale = 'vi') => new Intl.NumberFormat(locale, {
@@ -20,14 +22,15 @@ const formatPrice = (value, currency = 'VND', locale = 'vi') => new Intl.NumberF
   maximumFractionDigits: currency === 'VND' ? 0 : 2,
 }).format(Number(value || 0));
 
-// data_amount = 0 means unlimited data.
+// data_amount = 0 means unlimited data; `unlimited` is resolved to a translated label at render time.
 const getDataOption = (pkg) => {
   const amount = Number(pkg?.data_amount);
   if (pkg?.data_amount == null || !Number.isFinite(amount)) return null;
   const unit = String(pkg.data_unit || '').toUpperCase();
   return {
     key: `${amount}-${unit}`,
-    label: amount === 0 ? 'Unlimited' : `${amount}${unit ? ` ${unit}` : ''}`,
+    unlimited: amount === 0,
+    label: `${amount}${unit ? ` ${unit}` : ''}`,
     sortValue: unit === 'GB' ? amount * 1024 : amount,
   };
 };
@@ -40,6 +43,7 @@ const getValidityDays = (pkg) => {
 export default function BssPackageSelector({
   country, packages: allPackages, loadPackagesByPlanType, locale, onBuyNow, brand = 'web',
 }) {
+  const t = useTranslations('travelEsimFlow.selector');
   const [planType, setPlanType] = useState('');
   const [planPackages, setPlanPackages] = useState(null);
   const [planError, setPlanError] = useState('');
@@ -89,13 +93,13 @@ export default function BssPackageSelector({
         if (current) setPlanPackages({ planType, items });
       })
       .catch((error) => {
-        if (current) setPlanError(error.response?.data?.message || error.message || 'Không thể tải gói theo loại đã chọn.');
+        if (current) setPlanError(error.response?.data?.message || error.message || t('loadPlanTypeFailed'));
       })
       .finally(() => {
         if (current) setIsLoadingPlan(false);
       });
     return () => { current = false; };
-  }, [planType, allPackages]);
+  }, [planType, allPackages, t]);
 
   const packages = useMemo(() => {
     if (!planType) return allPackages;
@@ -167,19 +171,21 @@ export default function BssPackageSelector({
     let current = true;
     setIsLoadingPrice(true);
     setPriceError('');
-    axios.get(`/api/bss/packages/${selectedPackage.package_id}/price?quantity=${quantity}&brand=${brand}`)
+    axios.get(`/api/bss/packages/${selectedPackage.package_id}/price?quantity=${quantity}&brand=${brand}`, {
+      headers: bssLocaleHeaders(locale),
+    })
       .then((response) => {
-        if (!response.data?.success) throw new Error(response.data?.message || 'Không thể kiểm tra giá gói.');
+        if (!response.data?.success) throw new Error(response.data?.message || t('priceCheckFailed'));
         if (current) setPrice({ ...response.data.data, pricedFor: `${selectedPackage.package_id}:${quantity}` });
       })
       .catch((error) => {
-        if (current) setPriceError(error.response?.data?.message || error.message || 'Không thể kiểm tra giá gói.');
+        if (current) setPriceError(error.response?.data?.message || error.message || t('priceCheckFailed'));
       })
       .finally(() => {
         if (current) setIsLoadingPrice(false);
       });
     return () => { current = false; };
-  }, [quantity, selectedPackage, brand]);
+  }, [quantity, selectedPackage, brand, locale, t]);
 
   const updateQuantity = (delta) => setQuantity((current) => {
     const value = Number(current) || 1;
@@ -219,14 +225,14 @@ export default function BssPackageSelector({
           {imageUrl && !imageFailed ? (
             <img
               src={imageUrl}
-              alt={`eSIM ${country.name}`}
+              alt={t('imageAlt', { region: country.name })}
               className="h-full max-h-[700px] min-h-[260px] w-full object-cover"
               onError={() => setImageFailed(true)}
             />
           ) : (
             <div role="alert" className="flex h-full min-h-[260px] flex-col items-center justify-center gap-2 p-6 text-center">
               <p className="font-semibold text-red-600">
-                {imageUrl ? 'Không tải được ảnh quốc gia' : 'Chưa có ảnh cho quốc gia này'}
+                {imageUrl ? t('imageLoadFailed') : t('imageMissing')}
               </p>
               {imageUrl && <p className="break-all text-xs text-[#888]">{imageUrl}</p>}
             </div>
@@ -234,12 +240,12 @@ export default function BssPackageSelector({
         </div>
 
         <div>
-          <p className="text-sm font-medium text-[#666]">Thiết lập gói eSIM cho {country.name}</p>
-          <h2 className="mt-1 text-2xl font-bold text-[#333]">Chọn gói phù hợp với chuyến đi</h2>
+          <p className="text-sm font-medium text-[#666]">{t('subtitle', { region: country.name })}</p>
+          <h2 className="mt-1 text-2xl font-bold text-[#333]">{t('title')}</h2>
 
           {planTypeChoices.length > 0 && (
             <fieldset className="mt-7">
-              <legend className="text-base font-bold text-[#333]">Loại gói</legend>
+              <legend className="text-base font-bold text-[#333]">{t('planType')}</legend>
               <div className="mt-3 flex flex-wrap gap-2">
                 {planTypeChoices.map((choice) => (
                   <button
@@ -253,7 +259,7 @@ export default function BssPackageSelector({
                         : 'border-[#e0e0e0] bg-white text-[#333] hover:border-[#faa61a]'
                     }`}
                   >
-                    {choice.label}
+                    {t(choice.labelKey)}
                   </button>
                 ))}
               </div>
@@ -262,11 +268,11 @@ export default function BssPackageSelector({
           )}
 
           {isLoadingPlan ? (
-            <p className="mt-7 text-sm text-[#777]">Đang tải gói eSIM...</p>
+            <p className="mt-7 text-sm text-[#777]">{t('loadingPackages')}</p>
           ) : (
           <>
           <fieldset className="mt-7">
-            <legend className="text-base font-bold text-[#333]">Dung lượng</legend>
+            <legend className="text-base font-bold text-[#333]">{t('data')}</legend>
             <div className="mt-3 flex flex-wrap gap-2">
               {dataChoices.map((option) => (
                 <button
@@ -279,15 +285,15 @@ export default function BssPackageSelector({
                       : 'border-[#e0e0e0] bg-white text-[#333] hover:border-[#faa61a]'
                   }`}
                 >
-                  {option.label}
+                  {option.unlimited ? t('unlimited') : option.label}
                 </button>
               ))}
             </div>
-            {!dataChoices.length && <p className="mt-3 text-sm text-[#777]">Chưa có dung lượng khả dụng.</p>}
+            {!dataChoices.length && <p className="mt-3 text-sm text-[#777]">{t('noData')}</p>}
           </fieldset>
 
           <fieldset className="mt-7">
-            <legend className="text-base font-bold text-[#333]">Ngày sử dụng</legend>
+            <legend className="text-base font-bold text-[#333]">{t('days')}</legend>
             <div className="mt-3 flex flex-wrap gap-2">
               {validityChoices.map((days) => (
                 <button
@@ -303,17 +309,17 @@ export default function BssPackageSelector({
                         : 'cursor-not-allowed border-[#eeeeee] bg-[#f5f5f5] text-[#c4c4c4]'
                   }`}
                 >
-                  {days} ngày
+                  {t('daysUnit', { days })}
                 </button>
               ))}
             </div>
-            {!validityChoices.length && <p className="mt-3 text-sm text-[#777]">Chưa có ngày sử dụng khả dụng.</p>}
+            {!validityChoices.length && <p className="mt-3 text-sm text-[#777]">{t('noDays')}</p>}
           </fieldset>
 
           <div className="mt-8 border-t border-[#eee] pt-6">
-            <h3 className="text-base font-bold text-[#333]">Gợi ý gói eSIM</h3>
+            <h3 className="text-base font-bold text-[#333]">{t('suggested')}</h3>
             {!selectedDataKey || !selectedDays ? (
-              <p className="mt-3 text-sm text-[#777]">Đang chọn dung lượng và ngày sử dụng mặc định.</p>
+              <p className="mt-3 text-sm text-[#777]">{t('pickDefault')}</p>
             ) : suggestedPackages.length ? (
               <div className="mt-3 grid max-h-[420px] gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
                 {suggestedPackages.map((pkg) => {
@@ -328,23 +334,23 @@ export default function BssPackageSelector({
                       }`}
                     >
                       <p className="font-semibold text-[#333]">{pkg.name}</p>
-                      <p className="mt-2 text-sm text-[#666]">{pkg.provider_name || 'eSIM'} · {pkg.package_type === 'TOP_UP' ? 'Nạp thêm' : 'eSIM mới'}</p>
+                      <p className="mt-2 text-sm text-[#666]">{pkg.provider_name || 'eSIM'} · {pkg.package_type === 'TOP_UP' ? t('typeTopup') : t('typeNew')}</p>
                       <p className="mt-3 font-bold text-[#faa61a]">{formatPrice(pkg.selling_price, pkg.currency, locale)}</p>
                     </button>
                   );
                 })}
               </div>
             ) : (
-              <p className="mt-3 text-sm text-[#777]">Chưa có gói phù hợp với lựa chọn này.</p>
+              <p className="mt-3 text-sm text-[#777]">{t('noPackage')}</p>
             )}
           </div>
 
           {selectedPackage && (
             <div className="mt-6 rounded-xl bg-[#fafafa] p-4">
               <div className="flex items-center justify-between gap-4">
-                <span className="font-semibold text-[#333]">Số lượng gói</span>
+                <span className="font-semibold text-[#333]">{t('quantity')}</span>
                 <div className="flex items-center gap-3 rounded-lg bg-white px-2 py-1 shadow-sm">
-                  <button type="button" onClick={() => updateQuantity(-1)} disabled={Number(quantity) <= 1} className="h-8 w-8 rounded-full text-lg text-[#555] disabled:text-[#bbb]" aria-label="Giảm số lượng">−</button>
+                  <button type="button" onClick={() => updateQuantity(-1)} disabled={Number(quantity) <= 1} className="h-8 w-8 rounded-full text-lg text-[#555] disabled:text-[#bbb]" aria-label={t('decrease')}>−</button>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -352,14 +358,14 @@ export default function BssPackageSelector({
                     onChange={handleQuantityInputChange}
                     onBlur={handleQuantityBlur}
                     maxLength={2}
-                    aria-label="Số lượng gói"
+                    aria-label={t('quantity')}
                     className="w-10 border-0 bg-transparent text-center text-base font-semibold text-[#333] outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
-                  <button type="button" onClick={() => updateQuantity(1)} disabled={Number(quantity) >= MAX_QUANTITY} className="h-8 w-8 rounded-full bg-[#faa61a] text-lg text-white disabled:opacity-50" aria-label="Tăng số lượng">+</button>
+                  <button type="button" onClick={() => updateQuantity(1)} disabled={Number(quantity) >= MAX_QUANTITY} className="h-8 w-8 rounded-full bg-[#faa61a] text-lg text-white disabled:opacity-50" aria-label={t('increase')}>+</button>
                 </div>
               </div>
               <div className="mt-5 flex items-end justify-between gap-4 border-t border-[#e8e8e8] pt-4">
-                <div><p className="text-sm text-[#666]">Tổng thanh toán</p><p className="mt-1 text-xs text-[#888]">Giá được xác nhận lại trước khi thanh toán.</p></div>
+                <div><p className="text-sm text-[#666]">{t('total')}</p><p className="mt-1 text-xs text-[#888]">{t('priceNote')}</p></div>
                 <strong aria-busy={isPricing} className={`text-xl text-[#faa61a] transition-opacity ${isPricing ? 'opacity-50' : ''}`}>{formatPrice(displayTotal, currency, locale)}</strong>
               </div>
               {priceError && <p className="mt-3 text-sm text-red-600">{priceError}</p>}
@@ -369,7 +375,7 @@ export default function BssPackageSelector({
                 disabled={isPricing || Boolean(priceError) || !Number.isInteger(quantity) || quantity < 1}
                 className="mt-5 w-full rounded-lg bg-[#faa61a] px-5 py-3 font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Mua ngay
+                {t('buyNow')}
               </button>
             </div>
           )}

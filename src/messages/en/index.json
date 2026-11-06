@@ -3331,5 +3331,202 @@
     "viewDetail": "View details",
     "txDetailTitle": "Transaction details",
     "close": "Close"
+  },
+  "travelEsimFlow": {
+    "tabs": {
+      "national": "National eSIM",
+      "regional": "Regional eSIM",
+      "global": "Global eSIM",
+      "ariaLabel": "eSIM type"
+    },
+    "errorWithDetail": "An error occurred: {error}",
+    "loadDestinationsFailed": "Unable to load destinations.",
+    "loadPackagesFailed": "Unable to load eSIM plans.",
+    "marketing": {
+      "eyebrow": "Stay connected anywhere, at a great price",
+      "heroTitle": "INTERNATIONAL eSIM -",
+      "heroHighlight": "SAVE UP TO 80%",
+      "popularTitle": "Fastest data,",
+      "popularHighlight": "Best price",
+      "popularText": "Connect instantly in more than 200 destinations",
+      "priceFrom": "From:",
+      "showAll": "View more",
+      "showLess": "Show fewer destinations",
+      "howTitle": "How does SkyFi eSIM",
+      "howHighlight": "work?",
+      "whyTitle": "Why choose",
+      "whyHighlight": "SkyFi",
+      "customersAlt": "SkyFi customers staying connected on every journey",
+      "customersCount": "1000+ customers worldwide",
+      "customersSince": "have trusted SkyFi since 2024",
+      "customerLabel": "SkyFi customer",
+      "appTitle": "Download the SkyFi app",
+      "appText": "Manage your eSIMs, track your data and stay connected on every journey in just a few taps.",
+      "steps": [
+        {
+          "title": "Choose your destination & travel dates",
+          "description": "Pick the country you are visiting and how many days you need the eSIM. Remember to check that your device supports eSIM before you buy."
+        },
+        {
+          "title": "Get your eSIM instantly",
+          "description": "A QR code or a manual installation code is sent to your email. Installation is quick: just scan the code."
+        },
+        {
+          "title": "Activate & enjoy your trip",
+          "description": "Install the eSIM before you travel and turn on data when you arrive to stay connected smoothly."
+        }
+      ],
+      "reasons": [
+        {
+          "title": "Fast – Convenient – Affordable",
+          "points": [
+            "International travel data from just 25,000 VND, saving up to 80% compared with traditional roaming.",
+            "Easily choose the right SIM for many devices.",
+            "eSIM: get the QR code by email, then scan and install it within 2 minutes to start using it right away.",
+            "Physical SIM: fast nationwide delivery, compatible with all devices."
+          ]
+        },
+        {
+          "title": "Global, reliable connectivity everywhere",
+          "points": [
+            "The fastest data.",
+            "World-leading network infrastructure keeps you connected anytime, anywhere.",
+            "Flexible, varied plans for every kind of trip."
+          ]
+        },
+        {
+          "title": "24/7 customer support",
+          "points": [
+            "Our Customer Care team is available 24/7 throughout your journey.",
+            "Support through many channels, including the hotline, Zalo OA and WhatsApp."
+          ]
+        },
+        {
+          "title": "Customer-first policy",
+          "points": [
+            "100% refund if the product is faulty.",
+            "We are committed to complete peace of mind and a transparent, reliable service."
+          ]
+        }
+      ],
+      "testimonials": [
+        {
+          "name": "Trâm Anh Lê",
+          "initials": "TA",
+          "quote": "I used a Gohub eSIM on my recent trip to Australia. The Internet connection was really stable the whole time. The staff were lovely and gave me really helpful advice. A perfect 10!"
+        },
+        {
+          "name": "Lê Thanh",
+          "initials": "LT",
+          "quote": "I used a Gohub eSIM on my recent trip to Australia. The Internet connection was really stable the whole time. The staff were lovely and gave me really helpful advice. A perfect 10!"
+        },
+        {
+          "name": "Nguyễn Thị Mai",
+          "initials": "NM",
+          "quote": "I used a Gohub eSIM on my recent trip to Australia. The Internet connection was really stable the whole time. The staff were lovely and gave me really helpful advice. A perfect 10!"
+        },
+        {
+          "name": "William",
+          "initials": "W",
+          "quote": "I used a Gohub eSIM on my recent trip to Australia. The Internet connection was really stable the whole time. The staff were lovely and gave me really helpful advice. A perfect 10!"
+        }
+      ]
+    },
+    "selector": {
+      "subtitle": "Set up your eSIM plan for {region}",
+      "title": "Choose the right plan for your trip",
+      "imageAlt": "eSIM {region}",
+      "imageLoadFailed": "Unable to load the destination image",
+      "imageMissing": "No image for this destination yet",
+      "planType": "Plan type",
+      "planAll": "All",
+      "planFixed": "Total data",
+      "planDaily": "Daily data",
+      "planUnlimited": "Unlimited",
+      "loadPlanTypeFailed": "Unable to load plans of the selected type.",
+      "loadingPackages": "Loading eSIM plans...",
+      "data": "Data",
+      "unlimited": "Unlimited",
+      "noData": "No data option available.",
+      "days": "Validity",
+      "daysUnit": "{days, plural, one {# day} other {# days}}",
+      "noDays": "No validity option available.",
+      "suggested": "Suggested eSIM plans",
+      "pickDefault": "Selecting the default data and validity...",
+      "noPackage": "No plan matches this selection.",
+      "typeNew": "New eSIM",
+      "typeTopup": "Top-up",
+      "quantity": "Quantity",
+      "decrease": "Decrease quantity",
+      "increase": "Increase quantity",
+      "total": "Total",
+      "priceNote": "The price is re-confirmed before payment.",
+      "priceCheckFailed": "Unable to check the plan price.",
+      "buyNow": "Buy now"
+    },
+    "checkout": {
+      "back": "← Back to plans",
+      "title": "eSIM checkout",
+      "subtitle": "Your eSIM will be sent to your email after a successful payment.",
+      "fullName": "Full name",
+      "phone": "Phone number",
+      "email": "Email to receive the eSIM",
+      "agree": "I agree to the eSIM transaction terms.",
+      "submit": "Create order and pay",
+      "creating": "Creating order...",
+      "orderCode": "Order code:",
+      "orderSummary": "Your order",
+      "packageCount": "{quantity, plural, one {# plan} other {# plans}} · {days, plural, one {# day} other {# days}}",
+      "total": "Total",
+      "checkingPrice": "Checking price...",
+      "priceNote": "The price is re-confirmed right before the order is created.",
+      "errNoPackage": "The selected eSIM plan was not found. Please choose a plan again.",
+      "errInvalidPackage": "The eSIM plan data is invalid. Please choose a plan again.",
+      "errPrice": "Unable to check the plan price.",
+      "errAgree": "Please accept the terms before paying.",
+      "errCreate": "Unable to create the order.",
+      "errNoPaymentUrl": "The order was created but has no payment link yet. Please retry the payment or contact support."
+    },
+    "result": {
+      "paidTitle": "Payment successful",
+      "statusTitle": "Order status",
+      "checking": "Checking order status...",
+      "orderCode": "Order code:",
+      "status": "Status:",
+      "payment": "Payment:",
+      "total": "Total:",
+      "recheck": "Check again",
+      "buyAgain": "Buy another eSIM",
+      "errNoOrder": "Order code not found.",
+      "errCheck": "Unable to check the order.",
+      "statuses": {
+        "PENDING": "Pending",
+        "AWAITING_PAYMENT": "Awaiting payment",
+        "PAID": "Paid",
+        "PROVISIONING": "Provisioning eSIM",
+        "COMPLETED": "Completed",
+        "PAYMENT_FAILED": "Payment failed",
+        "CANCELLED": "Cancelled",
+        "PROVISIONING_FAILED": "Provisioning failed",
+        "REFUND_PENDING": "Refund pending",
+        "REFUNDED": "Refunded"
+      },
+      "paymentStatuses": {
+        "PENDING": "Pending",
+        "UNPAID": "Unpaid",
+        "PAID": "Paid",
+        "SUCCESS": "Successful",
+        "FAILED": "Failed",
+        "CANCELLED": "Cancelled",
+        "EXPIRED": "Expired",
+        "REFUNDED": "Refunded"
+      }
+    },
+    "paymentResult": {
+      "notFoundTitle": "Order not found",
+      "notFoundOrder": "We could not find order <bold>{orderId}</bold>.",
+      "hotline": "Please call our hotline 1900 6605 for support.",
+      "logoAlt": "SkyFi logo"
+    }
   }
 }

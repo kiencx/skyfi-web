@@ -3247,7 +3247,7 @@
   },
   "loginSim": {
     "breadcrumbHome": "Trang chủ",
-    "breadcrumbCurrent": "Login SIM",
+    "breadcrumbCurrent": "Đăng nhập SIM",
     "titlePrefix": "Bạn đã có",
     "titleHighlight": "eSIM?",
     "subtitle": "Truy cập và quản lý SIM của bạn để theo dõi dung lượng, thời hạn và mua thêm gói data dễ dàng",
@@ -3282,7 +3282,7 @@
   },
   "manageSim": {
     "breadcrumbHome": "Trang chủ",
-    "breadcrumbLogin": "Login SIM",
+    "breadcrumbLogin": "Đăng nhập SIM",
     "breadcrumbCurrent": "Quản lý SIM",
     "greeting": "Xin chào, {name}",
     "subtitle": "Dưới đây là thông tin eSIM của bạn",
@@ -3340,5 +3340,202 @@
     "viewDetail": "Xem chi tiết",
     "txDetailTitle": "Chi tiết giao dịch",
     "close": "Đóng"
+  },
+  "travelEsimFlow": {
+    "tabs": {
+      "national": "Danh sách quốc gia",
+      "regional": "Khu vực",
+      "global": "Toàn cầu",
+      "ariaLabel": "Loại eSIM"
+    },
+    "errorWithDetail": "Đã xảy ra lỗi: {error}",
+    "loadDestinationsFailed": "Không thể tải danh sách điểm đến.",
+    "loadPackagesFailed": "Không thể tải danh sách gói eSIM.",
+    "marketing": {
+      "eyebrow": "Kết nối muôn nơi, mua SIM giá hời",
+      "heroTitle": "eSIM QUỐC TẾ -",
+      "heroHighlight": "TIẾT KIỆM 80%",
+      "popularTitle": "Dữ liệu nhanh nhất,",
+      "popularHighlight": "Giá tốt nhất",
+      "popularText": "Kết nối ngay lập tức ở hơn 200 điểm đến",
+      "priceFrom": "Từ:",
+      "showAll": "Xem thêm",
+      "showLess": "Thu gọn danh sách",
+      "howTitle": "eSIM SkyFi",
+      "howHighlight": "hoạt động như thế nào?",
+      "whyTitle": "Vì sao chọn",
+      "whyHighlight": "SkyFi",
+      "customersAlt": "Khách hàng SkyFi kết nối trong mọi hành trình",
+      "customersCount": "1000++ khách hàng toàn cầu",
+      "customersSince": "đã tin dùng SkyFI từ 2024",
+      "customerLabel": "Khách hàng SkyFi",
+      "appTitle": "Tải ứng dụng SkyFi",
+      "appText": "Quản lý eSIM, theo dõi dung lượng và kết nối mọi hành trình chỉ với vài thao tác.",
+      "steps": [
+        {
+          "title": "Chọn điểm đến & thời gian sử dụng",
+          "description": "Chọn quốc gia bạn đến và số ngày cần dùng eSIM. Đừng quên kiểm tra thiết bị của bạn có hỗ trợ eSIM không trước khi mua."
+        },
+        {
+          "title": "Nhận eSIM ngay lập tức",
+          "description": "Mã QR hoặc mã cài đặt thủ công sẽ được gửi vào email của bạn. Cài đặt nhanh chóng, chỉ cần quét mã là xong."
+        },
+        {
+          "title": "Kích hoạt & tận hưởng chuyến đi",
+          "description": "Cài đặt eSIM trước chuyến đi và kích hoạt dữ liệu khi bạn đến nơi để luôn giữ kết nối suôn sẻ."
+        }
+      ],
+      "reasons": [
+        {
+          "title": "Nhanh – Tiện lợi – Chi phí hợp lý",
+          "points": [
+            "Du lịch quốc tế bắt đầu chỉ từ 25.000 VND, tiết kiệm tới 80% so với Roaming truyền thống.",
+            "Dễ dàng chọn SIM phù hợp cho nhiều thiết bị.",
+            "eSIM: Nhận mã QR qua email, quét và cài đặt trong vòng 02 phút để bắt đầu sử dụng ngay lập tức.",
+            "SIM vật lý: Giao hàng nhanh toàn quốc, tương thích với tất cả các thiết bị."
+          ]
+        },
+        {
+          "title": "Kết nối toàn cầu, ổn định mọi nơi",
+          "points": [
+            "Dữ liệu nhanh nhất.",
+            "Hạ tầng mạng hàng đầu thế giới đảm bảo kết nối ổn định mọi lúc, mọi nơi.",
+            "Gói cước linh hoạt và đa dạng đáp ứng mọi nhu cầu du lịch của bạn."
+          ]
+        },
+        {
+          "title": "Hỗ trợ khách hàng 24/7",
+          "points": [
+            "Đội ngũ Chăm sóc Khách hàng của chúng tôi luôn sẵn sàng 24/7 trong suốt hành trình của bạn.",
+            "Hỗ trợ qua nhiều kênh như Hotline, Zalo OA và WhatsApp."
+          ]
+        },
+        {
+          "title": "Chính sách ưu tiên khách hàng",
+          "points": [
+            "Hoàn tiền 100% nếu sản phẩm bị lỗi.",
+            "Cam kết mang lại sự an tâm tuyệt đối và trải nghiệm dịch vụ minh bạch, tin cậy."
+          ]
+        }
+      ],
+      "testimonials": [
+        {
+          "name": "Trâm Anh Lê",
+          "initials": "TA",
+          "quote": "Mình đã tin tưởng sử dụng eSIM của Gohub trong đợt đi Úc vừa qua. Tốc độ truy cập Internet cứ phải gọi là rất ổn định luôn. Các bạn nhân viên bên này cũng dễ thương lắm, tư vấn cực kỳ nhiệt tình luôn. 10 điểm luôn á"
+        },
+        {
+          "name": "Lê Thanh",
+          "initials": "LT",
+          "quote": "Mình đã tin tưởng sử dụng eSIM của Gohub trong đợt đi Úc vừa qua. Tốc độ truy cập Internet cứ phải gọi là rất ổn định luôn. Các bạn nhân viên bên này cũng dễ thương lắm, tư vấn cực kỳ nhiệt tình luôn. 10 điểm luôn á"
+        },
+        {
+          "name": "Nguyễn Thị Mai",
+          "initials": "NM",
+          "quote": "Mình đã tin tưởng sử dụng eSIM của Gohub trong đợt đi Úc vừa qua. Tốc độ truy cập Internet cứ phải gọi là rất ổn định luôn. Các bạn nhân viên bên này cũng dễ thương lắm, tư vấn cực kỳ nhiệt tình luôn. 10 điểm luôn á"
+        },
+        {
+          "name": "William",
+          "initials": "W",
+          "quote": "Mình đã tin tưởng sử dụng eSIM của Gohub trong đợt đi Úc vừa qua. Tốc độ truy cập Internet cứ phải gọi là rất ổn định luôn. Các bạn nhân viên bên này cũng dễ thương lắm, tư vấn cực kỳ nhiệt tình luôn. 10 điểm luôn á"
+        }
+      ]
+    },
+    "selector": {
+      "subtitle": "Thiết lập gói eSIM cho {region}",
+      "title": "Chọn gói phù hợp với chuyến đi",
+      "imageAlt": "eSIM {region}",
+      "imageLoadFailed": "Không tải được ảnh quốc gia",
+      "imageMissing": "Chưa có ảnh cho quốc gia này",
+      "planType": "Loại gói",
+      "planAll": "Tất cả",
+      "planFixed": "Data tổng",
+      "planDaily": "Data hàng ngày",
+      "planUnlimited": "Không giới hạn",
+      "loadPlanTypeFailed": "Không thể tải gói theo loại đã chọn.",
+      "loadingPackages": "Đang tải gói eSIM...",
+      "data": "Dung lượng",
+      "unlimited": "Không giới hạn",
+      "noData": "Chưa có dung lượng khả dụng.",
+      "days": "Ngày sử dụng",
+      "daysUnit": "{days} ngày",
+      "noDays": "Chưa có ngày sử dụng khả dụng.",
+      "suggested": "Gợi ý gói eSIM",
+      "pickDefault": "Đang chọn dung lượng và ngày sử dụng mặc định.",
+      "noPackage": "Chưa có gói phù hợp với lựa chọn này.",
+      "typeNew": "eSIM mới",
+      "typeTopup": "Nạp thêm",
+      "quantity": "Số lượng gói",
+      "decrease": "Giảm số lượng",
+      "increase": "Tăng số lượng",
+      "total": "Tổng thanh toán",
+      "priceNote": "Giá được xác nhận lại trước khi thanh toán.",
+      "priceCheckFailed": "Không thể kiểm tra giá gói.",
+      "buyNow": "Mua ngay"
+    },
+    "checkout": {
+      "back": "← Quay lại chọn gói",
+      "title": "Thanh toán eSIM",
+      "subtitle": "Thông tin eSIM sẽ được gửi đến email của bạn sau khi thanh toán thành công.",
+      "fullName": "Họ và tên",
+      "phone": "Số điện thoại",
+      "email": "Email nhận eSIM",
+      "agree": "Tôi đồng ý với điều khoản giao dịch eSIM.",
+      "submit": "Tạo đơn và thanh toán",
+      "creating": "Đang tạo đơn...",
+      "orderCode": "Mã đơn:",
+      "orderSummary": "Đơn hàng của bạn",
+      "packageCount": "{quantity} gói · {days} ngày",
+      "total": "Tổng thanh toán",
+      "checkingPrice": "Đang kiểm tra giá...",
+      "priceNote": "Giá được xác nhận lại ngay trước khi tạo đơn.",
+      "errNoPackage": "Không tìm thấy gói eSIM đã chọn. Vui lòng chọn lại gói.",
+      "errInvalidPackage": "Dữ liệu gói eSIM không hợp lệ. Vui lòng chọn lại gói.",
+      "errPrice": "Không thể kiểm tra giá gói.",
+      "errAgree": "Vui lòng đồng ý với điều khoản trước khi thanh toán.",
+      "errCreate": "Không thể tạo đơn hàng.",
+      "errNoPaymentUrl": "Đơn đã được tạo nhưng chưa có liên kết thanh toán. Vui lòng thử lại thanh toán hoặc liên hệ hỗ trợ."
+    },
+    "result": {
+      "paidTitle": "Thanh toán thành công",
+      "statusTitle": "Trạng thái đơn hàng",
+      "checking": "Đang kiểm tra trạng thái đơn...",
+      "orderCode": "Mã đơn:",
+      "status": "Trạng thái:",
+      "payment": "Thanh toán:",
+      "total": "Tổng tiền:",
+      "recheck": "Kiểm tra lại",
+      "buyAgain": "Mua eSIM khác",
+      "errNoOrder": "Không tìm thấy mã đơn hàng.",
+      "errCheck": "Không thể kiểm tra đơn hàng.",
+      "statuses": {
+        "PENDING": "Đang chờ xử lý",
+        "AWAITING_PAYMENT": "Chờ thanh toán",
+        "PAID": "Đã thanh toán",
+        "PROVISIONING": "Đang cấp eSIM",
+        "COMPLETED": "Hoàn tất",
+        "PAYMENT_FAILED": "Thanh toán thất bại",
+        "CANCELLED": "Đã hủy",
+        "PROVISIONING_FAILED": "Cấp eSIM thất bại",
+        "REFUND_PENDING": "Đang hoàn tiền",
+        "REFUNDED": "Đã hoàn tiền"
+      },
+      "paymentStatuses": {
+        "PENDING": "Chờ thanh toán",
+        "UNPAID": "Chưa thanh toán",
+        "PAID": "Đã thanh toán",
+        "SUCCESS": "Thành công",
+        "FAILED": "Thất bại",
+        "CANCELLED": "Đã hủy",
+        "EXPIRED": "Hết hạn",
+        "REFUNDED": "Đã hoàn tiền"
+      }
+    },
+    "paymentResult": {
+      "notFoundTitle": "Không tìm thấy đơn hàng",
+      "notFoundOrder": "Không tìm thấy thông tin đơn <bold>{orderId}</bold>.",
+      "hotline": "Vui lòng gọi Hotline 1900 6605 để được hỗ trợ.",
+      "logoAlt": "Logo SkyFi"
+    }
   }
 }
