@@ -20,6 +20,10 @@ const indieFlower = Indie_Flower( { subsets: [ 'latin' ], weight: '400', variabl
 const abyssinicaSIL = Abyssinica_SIL( { subsets: [ 'latin' ], weight: '400', variable: '--font-abyssinica' } );
 
 
+// Khi bật CMP, banner cookie của CMP thay cho popup chính sách cũ, tránh hiện hai hộp xin đồng ý cùng lúc.
+// Tắt CMP thì popup cũ hiện lại như trước.
+const CMP_ENABLED = process.env.NEXT_PUBLIC_CMP_ENABLED === "true";
+
 const geistSans = Geist( {
   variable: "--font-geist-sans",
   subsets: [ "latin" ],
@@ -75,7 +79,7 @@ export default async function LocaleLayout( { children, params } ) {
                 { children }
                 <WarningPopup />
                 <ModalProvider />
-                <PrivacyPolicyPopup />
+                { !CMP_ENABLED && <PrivacyPolicyPopup /> }
               </WarningProvider>
             </UserProvider>
           </LoadProvider>

@@ -49,3 +49,7 @@ next-env.d.ts
 # Sentry Config File
 .env.sentry-build-plugin
 .venv-img/
+
+# Kho quyền CMP relay và file bí mật
+/.data/
+/secrets/
