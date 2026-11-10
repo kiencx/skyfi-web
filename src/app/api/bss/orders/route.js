@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { bssFetch, isBssAuthError } from '../_lib/bss-auth';
 import { bffMessage, localeHeaders } from '../_lib/bss-locale';
 import { resolveBssBrand } from '../_lib/bss-brand';
-import { isVietnamMobile } from '@/app/utils/vietnamMobile';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,17 +13,13 @@ const normalizeItems = (items) => (Array.isArray(items) ? items : []).map((item)
 export async function POST(request) {
   const body = await request.json().catch(() => null);
   const customerName = String(body?.customer_name || '').trim();
-  const contactPhone = String(body?.contact_phone || '').trim();
   const email = String(body?.email || '').trim();
   const items = normalizeItems(body?.items);
 
-  if (!customerName || !contactPhone || !/^\S+@\S+\.\S+$/.test(email) || !items.length ||
+  if (!customerName || !/^\S+@\S+\.\S+$/.test(email) || !items.length ||
       items.some((item) => !Number.isInteger(item.package_id) || item.package_id <= 0 ||
         !Number.isInteger(item.quantity) || item.quantity <= 0)) {
     return NextResponse.json({ success: false, message: bffMessage(request, 'invalidCheckout') }, { status: 400 });
-  }
-  if (!isVietnamMobile(contactPhone)) {
-    return NextResponse.json({ success: false, message: bffMessage(request, 'invalidPhone') }, { status: 400 });
   }
 
   const { account, channel, source, touchpoint, paymentMethod } = resolveBssBrand(body?.brand);
@@ -37,7 +32,6 @@ export async function POST(request) {
     channel,
     payment_method: 'GALAXYPAY',
     customer_name: customerName,
-    contact_phone: contactPhone,
     email,
     touchpoint,
     source,

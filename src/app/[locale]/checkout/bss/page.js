@@ -9,7 +9,6 @@ import Header from '../../../components/Header';
 import HeaderCart from '@/app/components/HeaderCart';
 import { BSS_LAST_BRAND_KEY, BSS_LAST_ORDER_KEY, BSS_LAST_SRC_KEY, normalizeBrand } from '@/app/utils/bssCatalog';
 import { bssLocaleHeaders } from '@/app/utils/bssLocale';
-import { isVietnamMobile } from '@/app/utils/vietnamMobile';
 import useMyEsim from '@/app/hooks/useMyEsim';
 
 const SELECTED_PACKAGE_KEY = 'bssCheckoutItem';
@@ -39,7 +38,7 @@ export default function BssCheckoutPage() {
   const [error, setError] = useState('');
   const [orderNumber, setOrderNumber] = useState('');
   const idempotencyKeyRef = useRef(null);
-  const [form, setForm] = useState({ customer_name: '', contact_phone: '', email: '', agree_terms: false });
+  const [form, setForm] = useState({ customer_name: '', email: '', agree_terms: false });
 
   useEffect(() => {
     const storedValue = window.sessionStorage.getItem(SELECTED_PACKAGE_KEY);
@@ -92,10 +91,6 @@ export default function BssCheckoutPage() {
   const submitOrder = async (event) => {
     event.preventDefault();
     if (!selectedPackage || !price || isSubmitting) return;
-    if (!isVietnamMobile(form.contact_phone)) {
-      setError(t('errPhone'));
-      return;
-    }
     if (!form.agree_terms) {
       setError(t('errAgree'));
       return;
@@ -104,7 +99,6 @@ export default function BssCheckoutPage() {
     const orderInput = {
       brand,
       customer_name: form.customer_name,
-      contact_phone: form.contact_phone.trim(),
       email: form.email,
       items: [{ package_id: selectedPackage.package_id, quantity: selectedPackage.quantity }],
     };
@@ -156,9 +150,6 @@ export default function BssCheckoutPage() {
             <div className="mt-7 grid gap-5">
               <label className="grid gap-2 text-sm font-medium text-[#333]">{t('fullName')}
                 <input required name="customer_name" value={form.customer_name} onChange={updateField} className="rounded-lg border border-[#ddd] px-4 py-3 outline-none focus:border-[#ed1b2f]" />
-              </label>
-              <label className="grid gap-2 text-sm font-medium text-[#333]">{t('phone')}
-                <input required type="tel" name="contact_phone" placeholder={t('phonePlaceholder')} value={form.contact_phone} onChange={updateField} className="rounded-lg border border-[#ddd] px-4 py-3 outline-none focus:border-[#ed1b2f]" />
               </label>
               <label className="grid gap-2 text-sm font-medium text-[#333]">{t('email')}
                 <input required type="email" name="email" value={form.email} onChange={updateField} className="rounded-lg border border-[#ddd] px-4 py-3 outline-none focus:border-[#ed1b2f]" />
