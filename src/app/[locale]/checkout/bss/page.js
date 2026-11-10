@@ -10,6 +10,7 @@ import HeaderCart from '@/app/components/HeaderCart';
 import { BSS_LAST_BRAND_KEY, BSS_LAST_ORDER_KEY, BSS_LAST_SRC_KEY, normalizeBrand } from '@/app/utils/bssCatalog';
 import { bssLocaleHeaders } from '@/app/utils/bssLocale';
 import { isVietnamMobile } from '@/app/utils/vietnamMobile';
+import useMyEsim from '@/app/hooks/useMyEsim';
 
 const SELECTED_PACKAGE_KEY = 'bssCheckoutItem';
 
@@ -22,6 +23,10 @@ const formatPrice = (value, currency = 'VND', locale = 'vi') => new Intl.NumberF
 export default function BssCheckoutPage() {
   const locale = useLocale();
   const t = useTranslations('travelEsimFlow.checkout');
+  const tTerms = useTranslations('checkout');
+  const tCommon = useTranslations('common');
+  const { showDevicesEsim } = useMyEsim();
+  const [showTermsPopup, setShowTermsPopup] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const packageId = searchParams.get('packageId');
@@ -69,6 +74,19 @@ export default function BssCheckoutPage() {
   const updateField = (event) => {
     const { name, value, checked, type } = event.target;
     setForm((current) => ({ ...current, [name]: type === 'checkbox' ? checked : value }));
+  };
+
+  // Hai link trong dòng đồng ý giống trang thanh toán skyfi.vn: không đổi trạng thái checkbox khi bấm.
+  const openDevicesEsim = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    showDevicesEsim();
+  };
+
+  const openTerms = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setShowTermsPopup(true);
   };
 
   const submitOrder = async (event) => {
@@ -147,7 +165,17 @@ export default function BssCheckoutPage() {
               </label>
               <label className="flex items-start gap-3 text-sm text-[#555]">
                 <input required type="checkbox" name="agree_terms" checked={form.agree_terms} onChange={updateField} className="mt-1" />
-                {t('agree')}
+                <span>
+                  {tTerms('devicePrefix')}{' '}
+                  <span role="button" tabIndex={0} onClick={openDevicesEsim} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openDevicesEsim(e)} className="cursor-pointer text-[#E69818] underline transition-colors hover:text-[#D18500]">
+                    {tTerms('deviceCompatibility')}
+                  </span>
+                  . {tTerms('agreeWith')}{' '}
+                  <span role="button" tabIndex={0} onClick={openTerms} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openTerms(e)} className="cursor-pointer text-[#E69818] underline transition-colors hover:text-[#D18500]">
+                    {tTerms('termsAndConditions')}
+                  </span>
+                  .
+                </span>
               </label>
             </div>
             {error && <p className="mt-5 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}{orderNumber && <> {t('orderCode')} <strong>{orderNumber}</strong>.</>}</p>}
@@ -167,6 +195,21 @@ export default function BssCheckoutPage() {
         </div>
       </main>
       {viewSrc === 'vj' ? null : <Footer />}
+
+      {showTermsPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="flex h-[90vh] w-[90vw] flex-col overflow-hidden rounded-[12px] bg-white">
+            <div className="flex-1 overflow-hidden">
+              <iframe src={`/${locale}/terms-and-conditions?src=app`} className="h-full w-full border-0" title={tTerms('termsAndConditions')} />
+            </div>
+            <div className="border-t p-6">
+              <button type="button" onClick={() => setShowTermsPopup(false)} className="w-full rounded-[8px] bg-[#E69818] py-3 text-[16px] font-semibold text-white transition-colors hover:bg-[#D18500]">
+                {tCommon('close')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
