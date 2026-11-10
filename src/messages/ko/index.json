@@ -1873,6 +1873,8 @@
       "errInvalidPackage": "The eSIM plan data is invalid. Please choose a plan again.",
       "errPrice": "Unable to check the plan price.",
       "errAgree": "Please accept the terms before paying.",
+      "errPhone": "Please enter a Vietnamese mobile number, e.g. 0912345678 or +84912345678.",
+      "phonePlaceholder": "0912345678 or +84912345678",
       "errCreate": "Unable to create the order.",
       "errNoPaymentUrl": "The order was created but has no payment link yet. Please retry the payment or contact support."
     },

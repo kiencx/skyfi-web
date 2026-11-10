@@ -3493,6 +3493,8 @@
       "errInvalidPackage": "Dữ liệu gói eSIM không hợp lệ. Vui lòng chọn lại gói.",
       "errPrice": "Không thể kiểm tra giá gói.",
       "errAgree": "Vui lòng đồng ý với điều khoản trước khi thanh toán.",
+      "errPhone": "Số điện thoại phải là số di động Việt Nam, ví dụ 0912345678 hoặc +84912345678.",
+      "phonePlaceholder": "0912345678 hoặc +84912345678",
       "errCreate": "Không thể tạo đơn hàng.",
       "errNoPaymentUrl": "Đơn đã được tạo nhưng chưa có liên kết thanh toán. Vui lòng thử lại thanh toán hoặc liên hệ hỗ trợ."
     },

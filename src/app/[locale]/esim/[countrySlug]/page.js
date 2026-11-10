@@ -14,6 +14,7 @@ import useMyEsim from "@/app/hooks/useMyEsim";
 import useTravelEsimTabs from "@/app/hooks/useTravelEsimTabs";
 import { trackPageView, trackBeginCheckout, trackSearch } from "@/app/utils/trackingHelper";
 import { bssLocaleHeaders } from '@/app/utils/bssLocale';
+import { matchesDestinationSearch } from '@/app/utils/bssCatalog';
 
 // Placeholder Icons
 const SearchIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
@@ -206,7 +207,7 @@ export default function CountryESimPlansPage() {
 
   // Filter countries based on search term for popover
   const filteredCountries = allCountries.filter(country =>
-    country.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    matchesDestinationSearch(country, searchTerm) &&
     String(country.code || country.id).toLowerCase() !== countrySlug.toLowerCase() // Exclude current country
   );
 
@@ -237,7 +238,7 @@ export default function CountryESimPlansPage() {
     if (allCountries.length > 0) {
       setShowFilterPopover(true);
       if (value.length >= 2) {
-        const results = allCountries.filter(c => c.name.toLowerCase().includes(value.toLowerCase()));
+        const results = allCountries.filter(c => matchesDestinationSearch(c, value));
         trackSearch(value, results.length, { search_type: 'autocomplete', search_category: 'country' });
       }
     }

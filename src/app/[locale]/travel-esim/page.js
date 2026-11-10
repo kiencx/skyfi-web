@@ -12,6 +12,7 @@ import useTravelEsimTabs, { travelEsimListHref } from '../../hooks/useTravelEsim
 import HeaderCart from "@/app/components/HeaderCart";
 import {trackProductListView, trackPageView, trackSearch} from "@/app/utils/trackingHelper";
 import { bssLocaleHeaders } from '@/app/utils/bssLocale';
+import { matchesDestinationSearch } from '@/app/utils/bssCatalog';
 
 
 const ArrowRight = () => <span aria-hidden="true" className="text-[22px] leading-none">→</span>;
@@ -195,9 +196,7 @@ export default function TravelESimPage() {
   }, [activeTab, fetchedData, isShowingAllDestinations, locale, showFigmaMarketing]);
 
   // Filter items based on search term for popover
-  const filteredData = fetchedData.filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredData = fetchedData.filter(item => matchesDestinationSearch(item, searchTerm));
 
   // Track page view on mount
   useEffect(() => {
@@ -228,7 +227,7 @@ export default function TravelESimPage() {
     setSearchTerm(value);
     setShowFilterPopover(true);
     if (value.length >= 2) {
-      const results = fetchedData.filter(item => item.name.toLowerCase().includes(value.toLowerCase()));
+      const results = fetchedData.filter(item => matchesDestinationSearch(item, value));
       trackSearch(value, results.length, { search_type: 'autocomplete', search_category: activeTab });
     }
   };

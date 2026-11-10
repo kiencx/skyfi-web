@@ -107,6 +107,9 @@ export default function BssPackageSelector({
   }, [planType, planPackages, allPackages]);
 
   const selectPlanType = (value) => {
+    // Re-clicking the active tab would set loading without changing planType, so the load effect never
+    // reruns to clear it and the selector stays on "Loading eSIM plans..." forever.
+    if (value === planType) return;
     setPlanType(value);
     setPlanError('');
     setIsLoadingPlan(Boolean(value));

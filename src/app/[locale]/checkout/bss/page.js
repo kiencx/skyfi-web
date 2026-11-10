@@ -9,6 +9,7 @@ import Header from '../../../components/Header';
 import HeaderCart from '@/app/components/HeaderCart';
 import { BSS_LAST_BRAND_KEY, BSS_LAST_ORDER_KEY, BSS_LAST_SRC_KEY, normalizeBrand } from '@/app/utils/bssCatalog';
 import { bssLocaleHeaders } from '@/app/utils/bssLocale';
+import { isVietnamMobile } from '@/app/utils/vietnamMobile';
 
 const SELECTED_PACKAGE_KEY = 'bssCheckoutItem';
 
@@ -73,6 +74,10 @@ export default function BssCheckoutPage() {
   const submitOrder = async (event) => {
     event.preventDefault();
     if (!selectedPackage || !price || isSubmitting) return;
+    if (!isVietnamMobile(form.contact_phone)) {
+      setError(t('errPhone'));
+      return;
+    }
     if (!form.agree_terms) {
       setError(t('errAgree'));
       return;
@@ -81,7 +86,7 @@ export default function BssCheckoutPage() {
     const orderInput = {
       brand,
       customer_name: form.customer_name,
-      contact_phone: form.contact_phone,
+      contact_phone: form.contact_phone.trim(),
       email: form.email,
       items: [{ package_id: selectedPackage.package_id, quantity: selectedPackage.quantity }],
     };
@@ -135,7 +140,7 @@ export default function BssCheckoutPage() {
                 <input required name="customer_name" value={form.customer_name} onChange={updateField} className="rounded-lg border border-[#ddd] px-4 py-3 outline-none focus:border-[#ed1b2f]" />
               </label>
               <label className="grid gap-2 text-sm font-medium text-[#333]">{t('phone')}
-                <input required type="tel" name="contact_phone" value={form.contact_phone} onChange={updateField} className="rounded-lg border border-[#ddd] px-4 py-3 outline-none focus:border-[#ed1b2f]" />
+                <input required type="tel" name="contact_phone" placeholder={t('phonePlaceholder')} value={form.contact_phone} onChange={updateField} className="rounded-lg border border-[#ddd] px-4 py-3 outline-none focus:border-[#ed1b2f]" />
               </label>
               <label className="grid gap-2 text-sm font-medium text-[#333]">{t('email')}
                 <input required type="email" name="email" value={form.email} onChange={updateField} className="rounded-lg border border-[#ddd] px-4 py-3 outline-none focus:border-[#ed1b2f]" />

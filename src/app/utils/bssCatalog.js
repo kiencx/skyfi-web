@@ -36,6 +36,22 @@ export const normalizeRegionType = (value) => {
 
 export const getRegionSlug = (region) => String(region?.code || region?.id || '').toLowerCase();
 
+// Lowercase and strip Vietnamese diacritics so "thai lan" matches "Thái Lan" and "dai loan" matches "Đài Loan".
+export const foldSearchText = (value) => String(value ?? '')
+  .normalize('NFD')
+  .replace(/[̀-ͯ]/g, '')
+  .replace(/đ/g, 'd')
+  .replace(/Đ/g, 'D')
+  .toLowerCase()
+  .trim();
+
+// Destination search: diacritic-insensitive match on the localized name, or the country code (e.g. "TH").
+export const matchesDestinationSearch = (region, term) => {
+  const query = foldSearchText(term);
+  if (!query) return true;
+  return foldSearchText(region?.name).includes(query) || foldSearchText(region?.code) === query;
+};
+
 // Only countries have an ISO flag; REGION/GLOBAL codes are numeric ids.
 export const getRegionFlagUrl = (region) => {
   if (region?.type && region.type !== 'COUNTRY') return null;
