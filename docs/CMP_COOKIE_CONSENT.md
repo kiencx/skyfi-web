@@ -29,6 +29,22 @@ Nếu SDK không tải được (sai SRI, lỗi mạng) GA4 không chạy (fail-
 | `src/app/components/CmpCookieConsent.jsx` | Nạp SDK có `integrity`, khởi tạo `CMP.CookieConsent` |
 | `src/app/layout.js` | Chặn GA4 khi bật CMP |
 
+### Tag tracking của từng trang
+
+SDK chỉ quét `<script data-cmp-code>` một lần lúc khởi động, nên tag trong các trang render phía client dùng
+`<ConsentGate code="...">` (`src/app/components/ConsentGate.jsx`). Banner đăng ký với SDK một "cổng" cho mỗi mã
+trong `GATED_CODES` (`src/app/utils/cmpConsent.js`); khi khách đồng ý, cổng mở và trang mới render tag.
+
+| Trang | Tag | Mã |
+|---|---|---|
+| layout gốc | GA4 `G-HBXX8BHMEV` | `COOKIE_ANALYTICS` (script khai báo) |
+| `travelsim`, `travelsim-m2m`, `travelsim/[param]` | GA `G-JWM8CQNVB2`, `G-F9HQDJ3267` | `COOKIE_ANALYTICS` |
+| `vj2` | GA `G-HR88CB3F4Y` | `COOKIE_ANALYTICS` |
+| `vj2` | GTM `GTM-T54TSR6P` (cả bản `<noscript>`) | `COOKIE_MARKETING` |
+
+Thêm tag mới thì bọc bằng `ConsentGate` với mã phù hợp. Lưu ý: GTM ở `vj2` đang gắn qua `next/head`, vốn không có
+tác dụng trong App Router, nên hiện GTM thực tế không nạp. Ta chỉ bọc lại nguyên trạng, không đổi cách nạp.
+
 Khi bật CMP, popup chính sách cũ (`PrivacyPolicyPopup`) bị ẩn để không hiện hai hộp xin đồng ý; tắt CMP thì popup cũ hiện lại.
 Lưu ý: popup cũ còn có liên kết mở "Chính sách bảo vệ dữ liệu cá nhân". Nên đưa liên kết này vào mẫu đồng ý cookie trên CMS.
 
