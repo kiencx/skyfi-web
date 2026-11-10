@@ -6,6 +6,7 @@
 // Fail-closed: nếu SDK không tải được (sai SRI, lỗi mạng) thì không script khai báo nào được kích hoạt.
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { GATED_CODES, grantConsent } from '@/app/utils/cmpConsent';
 
 const SDK_URL = process.env.NEXT_PUBLIC_CMP_SDK_URL;
 const SDK_INTEGRITY = process.env.NEXT_PUBLIC_CMP_SDK_INTEGRITY;
@@ -81,6 +82,22 @@ export default function CmpCookieConsent() {
           undefined,
           { protectedCookies: PROTECTED_COOKIES },
         );
+        // Phải đăng ký trước cookies.start() (SDK từ chối đăng ký sau khi đã start).
+        // Mỗi mã một "cổng" cho tag của các trang render phía client (xem ConsentGate).
+        GATED_CODES.filter((code) => config.cookieCodes.includes(code)).forEach((code) => {
+          cookies.registerResource({
+            id: `skyfi-gate:${code}`,
+            consentCodes: [code],
+            restartable: false,
+            start: () => grantConsent(code),
+            // Tag đã chạy thì không gỡ được; SDK sẽ báo khách tải lại trang khi rút đồng ý.
+            stop: () => {
+              throw Object.assign(new Error('RESOURCE_STOP_FAILED_RELOAD_REQUIRED'), {
+                code: 'RESOURCE_STOP_FAILED_RELOAD_REQUIRED',
+              });
+            },
+          });
+        });
         cookies.activateDeclaredScripts();
         cookies.mountSettingsButton('left');
         window.skyfiCookieSettings = () => cookies.openSettings();

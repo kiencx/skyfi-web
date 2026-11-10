@@ -3,6 +3,7 @@
 import { saveLocal } from '@/app/utils/saveLocal';
 import { useSearchParams } from 'next/navigation';
 import Script from 'next/script';
+import ConsentGate from '@/app/components/ConsentGate';
 import { use } from 'react';
 import Footer from '../../../components/Footer';
 import HeaderVJ from '../../../components/HeaderVJ';
@@ -28,6 +29,7 @@ export default function TravelSimPage(props) {
 				<div className='hidden md:block'>
 					<Footer />
 				</div>
+				<ConsentGate code="COOKIE_ANALYTICS">
 				<Script
 					src="https://www.googletagmanager.com/gtag/js?id=G-JWM8CQNVB2"
 					strategy="afterInteractive"
@@ -40,6 +42,7 @@ export default function TravelSimPage(props) {
             gtag('config', 'G-JWM8CQNVB2');
           `}
 				</Script>
+				</ConsentGate>
 			</>
 		);
 	}
@@ -53,6 +56,7 @@ export default function TravelSimPage(props) {
 				<div className='hidden md:block'>
 					<Footer />
 				</div>
+				<ConsentGate code="COOKIE_ANALYTICS">
 				<Script
 					src="https://www.googletagmanager.com/gtag/js?id=G-F9HQDJ3267"
 					strategy="afterInteractive"
@@ -65,6 +69,7 @@ export default function TravelSimPage(props) {
             gtag('config', 'G-F9HQDJ3267');
           `}
 				</Script>
+				</ConsentGate>
 			</>
 		);
 	}
