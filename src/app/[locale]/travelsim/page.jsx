@@ -10,6 +10,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { useLocale, useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import Script from 'next/script';
+import ConsentGate from '@/app/components/ConsentGate';
 import { FormProvider, useForm } from 'react-hook-form';
 import { object, string } from 'yup';
 import { useRouter } from '../../../i18n/navigation';
@@ -160,6 +161,7 @@ export default function TravelSimPage() {
             </div>
             { type == 'freemium' ? (
                 <>
+                    <ConsentGate code="COOKIE_ANALYTICS">
                     <Script
                         src="https://www.googletagmanager.com/gtag/js?id=G-JWM8CQNVB2"
                         strategy="afterInteractive"
@@ -172,9 +174,11 @@ export default function TravelSimPage() {
             gtag('config', 'G-JWM8CQNVB2');
           `}
                     </Script>
+                    </ConsentGate>
                 </>
             ) : (
                 <>
+                    <ConsentGate code="COOKIE_ANALYTICS">
                     <Script
                         src="https://www.googletagmanager.com/gtag/js?id=G-F9HQDJ3267"
                         strategy="afterInteractive"
@@ -187,6 +191,7 @@ export default function TravelSimPage() {
             gtag('config', 'G-F9HQDJ3267');
           `}
                     </Script>
+                    </ConsentGate>
                 </>
             ) }
         </>
