@@ -2,8 +2,20 @@ import { NextResponse } from 'next/server';
 import { bssFetch, isBssAuthError } from '../_lib/bss-auth';
 import { bffMessage, localeHeaders } from '../_lib/bss-locale';
 import { resolveBssBrand } from '../_lib/bss-brand';
+import { REFERRAL_COOKIE } from '@/app/utils/referralCode';
 
 export const dynamic = 'force-dynamic';
+
+// Mã giới thiệu từ cookie `rf` (middleware lưu khi khách vào link `?rf=<mã>`). BE tự bỏ qua mã không hợp lệ.
+const referralCodeFrom = (request) => {
+  const value = request.cookies.get(REFERRAL_COOKIE)?.value;
+  if (!value) return null;
+  try {
+    return decodeURIComponent(value).trim().slice(0, 100) || null;
+  } catch {
+    return null;
+  }
+};
 
 const normalizeItems = (items) => (Array.isArray(items) ? items : []).map((item) => ({
   package_id: Number(item?.package_id),
@@ -38,6 +50,7 @@ export async function POST(request) {
     segment: 'RETAIL',
     delivery_address: null,
     shipping_amount: 0,
+    referral_code: referralCodeFrom(request),
     items,
   };
 

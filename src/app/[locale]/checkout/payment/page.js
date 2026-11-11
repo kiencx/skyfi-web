@@ -1,6 +1,7 @@
 "use client";
 
 import {yupResolver} from '@hookform/resolvers/yup';
+import { readReferralCodeCookie } from '@/app/utils/referralCode';
 import {useLocale, useTranslations} from 'next-intl';
 import Image from 'next/image';
 
@@ -343,7 +344,7 @@ export default function PaymentPage() {
 
             const res = await CheckoutService.createOrder({
                 ...data,
-                referral_code:data.referral_code?.trim(),
+                referral_code: data.referral_code?.trim() || readReferralCodeCookie(),
                 payment_method:viewSrc==='vj'?"SKYJOY":data.payment_method
             });
             if (!res.order_number) {

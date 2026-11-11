@@ -1,6 +1,7 @@
 import createMiddleware from 'next-intl/middleware';
 import { NextResponse } from 'next/server';
 import { defaultLocale, locales } from './i18n';
+import { REFERRAL_COOKIE, REFERRAL_COOKIE_MAX_AGE, REFERRAL_QUERY_PARAM } from './app/utils/referralCode';
 
 const intlMiddleware = createMiddleware({
   // A list of all locales that are supported
@@ -27,14 +28,28 @@ const paymentReturnLocale = (request) => {
   return locales.includes(language) ? language : null;
 };
 
+// Link giới thiệu `?rf=<mã>`: lưu mã vào cookie để luồng mua gắn vào đơn hàng (giữ 24h).
+const rememberReferralCode = (request, response) => {
+  const referralCode = request.nextUrl.searchParams.get(REFERRAL_QUERY_PARAM)?.trim();
+  if (referralCode) {
+    response.cookies.set(REFERRAL_COOKIE, referralCode, {
+      maxAge: REFERRAL_COOKIE_MAX_AGE,
+      path: '/',
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    });
+  }
+  return response;
+};
+
 export default function middleware(request) {
   const locale = paymentReturnLocale(request);
   if (locale) {
     const url = request.nextUrl.clone();
     url.pathname = `/${locale}${request.nextUrl.pathname}`;
-    return NextResponse.redirect(url);
+    return rememberReferralCode(request, NextResponse.redirect(url));
   }
-  return intlMiddleware(request);
+  return rememberReferralCode(request, intlMiddleware(request));
 }
 
 
