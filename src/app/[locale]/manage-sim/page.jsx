@@ -37,13 +37,19 @@ const toTime = (value) => {
 
 const startOfDay = (time) => new Date(time).setHours(0, 0, 0, 0);
 
-// Providers only report expiresAt once the eSIM is activated; until then validity counts from purchase.
+// Days a purchased eSIM can wait before it has to be activated.
+const ACTIVATION_WINDOW_DAYS = 60;
+
+// Providers only report expiresAt once the eSIM is activated. Until then the latest possible expiry is
+// purchase + activation window + package validity.
 const getExpiryTime = (item) => {
   const expiresAt = toTime(item?.usage?.expiresAt);
   if (expiresAt !== null) return expiresAt;
   const createdAt = toTime(item?.createdAt);
   const validityDays = toNumber(item?.validityDays);
-  return createdAt !== null && validityDays !== null ? createdAt + validityDays * DAY_MS : null;
+  return createdAt !== null && validityDays !== null
+    ? createdAt + (ACTIVATION_WINDOW_DAYS + validityDays) * DAY_MS
+    : null;
 };
 
 const formatAmount = (value) => (value === null ? '' : String(Math.round(value * 100) / 100));
