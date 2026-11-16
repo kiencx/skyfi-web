@@ -3490,6 +3490,8 @@
       "checkingPrice": "Đang kiểm tra giá...",
       "priceNote": "Giá được xác nhận lại ngay trước khi tạo đơn.",
       "errNoPackage": "Không tìm thấy gói eSIM đã chọn. Vui lòng chọn lại gói.",
+      "errFullName": "Vui lòng nhập họ và tên.",
+      "errEmail": "Vui lòng nhập email hợp lệ.",
       "errInvalidPackage": "Dữ liệu gói eSIM không hợp lệ. Vui lòng chọn lại gói.",
       "errPrice": "Không thể kiểm tra giá gói.",
       "errAgree": "Vui lòng đồng ý với điều khoản trước khi thanh toán.",

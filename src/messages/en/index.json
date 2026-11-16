@@ -3481,6 +3481,8 @@
       "checkingPrice": "Checking price...",
       "priceNote": "The price is re-confirmed right before the order is created.",
       "errNoPackage": "The selected eSIM plan was not found. Please choose a plan again.",
+      "errFullName": "Please enter your full name.",
+      "errEmail": "Please enter a valid email address.",
       "errInvalidPackage": "The eSIM plan data is invalid. Please choose a plan again.",
       "errPrice": "Unable to check the plan price.",
       "errAgree": "Please accept the terms before paying.",

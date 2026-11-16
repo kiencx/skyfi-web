@@ -39,6 +39,7 @@ export default function BssCheckoutPage() {
   const [orderNumber, setOrderNumber] = useState('');
   const idempotencyKeyRef = useRef(null);
   const [form, setForm] = useState({ customer_name: '', email: '', agree_terms: false });
+  const [fieldErrors, setFieldErrors] = useState({});
 
   useEffect(() => {
     const storedValue = window.sessionStorage.getItem(SELECTED_PACKAGE_KEY);
@@ -73,6 +74,16 @@ export default function BssCheckoutPage() {
   const updateField = (event) => {
     const { name, value, checked, type } = event.target;
     setForm((current) => ({ ...current, [name]: type === 'checkbox' ? checked : value }));
+    setFieldErrors((current) => (current[name] ? { ...current, [name]: '' } : current));
+  };
+
+  // Bug 48: trình duyệt chỉ chặn ô trống hẳn, chuỗi toàn khoảng trắng vẫn lọt nên kiểm tra sau khi trim.
+  const validateForm = () => {
+    const errors = {};
+    if (!form.customer_name.trim()) errors.customer_name = t('errFullName');
+    if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) errors.email = t('errEmail');
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   // Hai link trong dòng đồng ý giống trang thanh toán skyfi.vn: không đổi trạng thái checkbox khi bấm.
@@ -91,6 +102,7 @@ export default function BssCheckoutPage() {
   const submitOrder = async (event) => {
     event.preventDefault();
     if (!selectedPackage || !price || isSubmitting) return;
+    if (!validateForm()) return;
     if (!form.agree_terms) {
       setError(t('errAgree'));
       return;
@@ -98,8 +110,8 @@ export default function BssCheckoutPage() {
 
     const orderInput = {
       brand,
-      customer_name: form.customer_name,
-      email: form.email,
+      customer_name: form.customer_name.trim(),
+      email: form.email.trim(),
       items: [{ package_id: selectedPackage.package_id, quantity: selectedPackage.quantity }],
     };
     const payloadFingerprint = JSON.stringify(orderInput);
@@ -129,7 +141,12 @@ export default function BssCheckoutPage() {
       }
       setError(t('errNoPaymentUrl'));
     } catch (requestError) {
-      setError(requestError.response?.data?.message || requestError.message || t('errCreate'));
+      const data = requestError.response?.data;
+      if (data?.field) {
+        setFieldErrors({ [data.field]: data.message });
+        return;
+      }
+      setError(data?.message || requestError.message || t('errCreate'));
     } finally {
       setIsSubmitting(false);
     }
@@ -149,10 +166,12 @@ export default function BssCheckoutPage() {
             <p className="mt-2 text-sm text-[#666]">{t('subtitle')}</p>
             <div className="mt-7 grid gap-5">
               <label className="grid gap-2 text-sm font-medium text-[#333]">{t('fullName')}
-                <input required name="customer_name" value={form.customer_name} onChange={updateField} className="rounded-lg border border-[#ddd] px-4 py-3 outline-none focus:border-[#ed1b2f]" />
+                <input required name="customer_name" value={form.customer_name} onChange={updateField} aria-invalid={Boolean(fieldErrors.customer_name)} className={`rounded-lg border px-4 py-3 outline-none focus:border-[#ed1b2f] ${fieldErrors.customer_name ? 'border-[#ed1b2f]' : 'border-[#ddd]'}`} />
+                {fieldErrors.customer_name && <span role="alert" className="text-[13px] font-normal text-[#ed1b2f]">{fieldErrors.customer_name}</span>}
               </label>
               <label className="grid gap-2 text-sm font-medium text-[#333]">{t('email')}
-                <input required type="email" name="email" value={form.email} onChange={updateField} className="rounded-lg border border-[#ddd] px-4 py-3 outline-none focus:border-[#ed1b2f]" />
+                <input required type="email" name="email" value={form.email} onChange={updateField} aria-invalid={Boolean(fieldErrors.email)} className={`rounded-lg border px-4 py-3 outline-none focus:border-[#ed1b2f] ${fieldErrors.email ? 'border-[#ed1b2f]' : 'border-[#ddd]'}`} />
+                {fieldErrors.email && <span role="alert" className="text-[13px] font-normal text-[#ed1b2f]">{fieldErrors.email}</span>}
               </label>
               <label className="flex items-start gap-3 text-sm text-[#555]">
                 <input required type="checkbox" name="agree_terms" checked={form.agree_terms} onChange={updateField} className="mt-1" />

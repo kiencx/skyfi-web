@@ -28,7 +28,14 @@ export async function POST(request) {
   const email = String(body?.email || '').trim();
   const items = normalizeItems(body?.items);
 
-  if (!customerName || !/^\S+@\S+\.\S+$/.test(email) || !items.length ||
+  // Báo rõ ô nào sai thay vì một thông báo chung (bug 48).
+  if (!customerName) {
+    return NextResponse.json({ success: false, field: 'customer_name', message: bffMessage(request, 'invalidCustomerName') }, { status: 400 });
+  }
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    return NextResponse.json({ success: false, field: 'email', message: bffMessage(request, 'invalidEmail') }, { status: 400 });
+  }
+  if (!items.length ||
       items.some((item) => !Number.isInteger(item.package_id) || item.package_id <= 0 ||
         !Number.isInteger(item.quantity) || item.quantity <= 0)) {
     return NextResponse.json({ success: false, message: bffMessage(request, 'invalidCheckout') }, { status: 400 });
