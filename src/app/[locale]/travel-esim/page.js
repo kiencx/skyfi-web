@@ -303,12 +303,14 @@ export default function TravelESimPage() {
 
     if (showFigmaMarketing && type === 'COUNTRY') {
       return (
-        <div className="grid grid-cols-1 justify-items-center gap-4 min-[620px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[repeat(3,286px)] xl:justify-between min-[1920px]:grid-cols-[repeat(4,286px)]">
+        // Figma: 4 thẻ 286×102 trong khung nội dung 1280px (cách ngang ~45px, dọc 32px).
+        // Dưới 1536px thẻ co giãn theo cột để laptop 1280–1535px vẫn đủ 4 cột.
+        <div className="grid grid-cols-1 gap-3 xs:grid-cols-2 sm:gap-4 md:grid-cols-3 xl:grid-cols-4 xl:gap-x-6 xl:gap-y-8 2xl:grid-cols-[repeat(4,286px)] 2xl:justify-between">
           {items.map(item => (
             <Link
               key={item.id}
               href={`/esim/${(item.code || item.id).toString().toLowerCase()}?type=${activeTab}&regions=${type}&src=${viewSrc}`}
-              className="group flex w-full max-w-[286px]"
+              className="group flex w-full min-w-0"
             >
               <article className="h-[102px] w-full overflow-hidden bg-white rounded-[22px] border border-[#d6d6d6] shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-[#ed1b2f]/30 group-hover:shadow-[0_8px_18px_rgba(0,0,0,0.09)] flex items-stretch">
                 {item.code && (
@@ -320,10 +322,11 @@ export default function TravelESimPage() {
                     />
                   </div>
                 )}
-                <div className="min-w-0 flex flex-1 flex-col justify-center px-5 py-3">
-                  <h3 className="font-inter font-bold text-[16px] leading-tight text-[#333] line-clamp-1 md:text-[18px]">{item.name}</h3>
+                {/* Figma (thẻ 286px): chữ ~24px, cách mép cờ 32px. Giá thật dài hơn mẫu Figma ("Từ: 170.200đ") nên chữ tối đa 20px, chừa lề phải. */}
+                <div className="min-w-0 flex flex-1 flex-col justify-center py-3 pl-3 pr-3 sm:pl-4 lg:pl-6 lg:pr-4 2xl:pl-8">
+                  <h3 className="font-inter font-bold text-[16px] leading-[1.3] text-[#333] line-clamp-1 lg:text-[18px] 2xl:text-[20px]" title={item.name}>{item.name}</h3>
                   {countryPrices[item.id] && (
-                    <p className="mt-1 font-inter text-[16px] font-semibold leading-tight text-[#333] md:text-[18px]">
+                    <p className="mt-1 font-inter text-[15px] font-bold leading-[1.3] text-[#333] whitespace-nowrap sm:text-[16px] lg:text-[18px] 2xl:text-[20px]">
                       {copy.priceFrom} <span className="text-[#ed1b2f]">{countryPrices[item.id]}</span>
                     </p>
                   )}
@@ -466,9 +469,9 @@ export default function TravelESimPage() {
 
         {/* Notice and Country Grid */}
         <section className="bg-[#f7f7f7] pt-6 pb-10 md:pt-8 md:pb-16">
-        <div className="container">
-          <div className="max-w-[760px] mb-8 md:mb-10">
-            <h2 className="font-inter font-bold text-[36px] leading-tight text-[#333]">
+        <div className={`container ${showFigmaMarketing ? '2xl:max-w-[calc(1280px+12rem)]' : ''}`}>
+          <div className="max-w-[760px] mb-6 md:mb-8 xl:mb-10">
+            <h2 className="font-inter font-bold text-[26px] sm:text-[30px] lg:text-[36px] leading-tight text-[#333]">
               {showFigmaMarketing ? <>{copy.popularTitle} <span className="text-[#ED1B2F]">{copy.popularHighlight}</span></> : t('bannerTitle')}
             </h2>
             {showFigmaMarketing && <p className="mt-3 text-[16px] text-[#666]">{copy.popularText}</p>}
