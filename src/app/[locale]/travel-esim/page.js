@@ -6,7 +6,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from '../../../i18n/navigation';
 import Footer from '../../components/Footer';
 import Header from '../../components/Header';
-import HaveEsimSection from '../../components/home/HaveEsimSection';
+import { HaveEsimRow } from '../../components/home/HaveEsimSection';
+import TravelEsimTabBar from '../../components/travel-esim/TravelEsimTabBar';
 import useMyEsim from '../../hooks/useMyEsim';
 import useTravelEsimTabs, { travelEsimListHref } from '../../hooks/useTravelEsimTabs';
 import HeaderCart from "@/app/components/HeaderCart";
@@ -396,16 +397,17 @@ export default function TravelESimPage() {
             <section className="relative z-20 min-h-[330px] md:min-h-[370px] flex items-center overflow-visible bg-[#311f35]"
                  style={{backgroundImage: 'linear-gradient(90deg, rgba(12, 17, 39, .55), rgba(237, 27, 47, .08)), url(/assets/travel-esim-banner.png)', backgroundSize: 'cover', backgroundPosition: 'center'}}>
                 <div className="relative z-10 container w-full py-12 md:py-16">
-                    <div className="max-w-[740px] mx-auto text-center flex flex-col items-center">
+                    <div className={`${showFigmaMarketing ? 'max-w-[988px]' : 'max-w-[740px]'} mx-auto text-center flex flex-col items-center`}>
                       {showFigmaMarketing ? <>
                       <p className="mb-4 rounded-[40px] border-2 border-[#FFFFFF3D] px-5 py-2 font-inter text-[20px] font-medium leading-tight text-white">{copy.eyebrow}</p>
                       <h1 className="font-inter text-[36px] font-bold uppercase leading-[1.05] tracking-tight text-white">
                         {copy.heroTitle} <span className="text-white">{copy.heroHighlight}</span>
                       </h1>
                       </> : <h1 className="font-inter font-bold text-white text-[30px] sm:text-[40px] md:text-[52px] leading-[1.1]">{t('bannerTitle')}</h1>}
-                      <div className="relative w-full max-w-[680px] mt-7 text-left">
-                        <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                            <img src="/assets/search-icon.svg" alt="" className="h-5 w-5" />
+                      <div className={showFigmaMarketing ? 'mt-[10px] flex w-full flex-col gap-3 rounded-2xl bg-white p-3 text-left shadow-[0_12px_32px_rgba(0,0,0,.22)]' : 'contents'}>
+                      <div className={`relative w-full text-left ${showFigmaMarketing ? '' : 'max-w-[680px] mt-7'}`}>
+                        <div className={`absolute inset-y-0 left-0 flex items-center pointer-events-none ${showFigmaMarketing ? 'pl-4' : 'pl-5'}`}>
+                            <img src="/assets/search-icon.svg" alt="" className={showFigmaMarketing ? 'h-6 w-6' : 'h-5 w-5'} />
                         </div>
                         <input
                             ref={searchInputRef}
@@ -414,7 +416,9 @@ export default function TravelESimPage() {
                             value={searchTerm}
                             onChange={handleSearchInputChange}
                             onFocus={handleSearchInputFocus}
-                            className="w-full bg-white border border-white/40 rounded-xl text-[16px] outline-none placeholder:text-[#8a8a8a] py-4 md:py-5 pr-12 pl-14 shadow-[0_12px_32px_rgba(0,0,0,.22)] focus:ring-2 focus:ring-[#ffd44d] focus:border-transparent"
+                            className={showFigmaMarketing
+                              ? 'h-14 w-full rounded-[14px] bg-[#f1f1f2] pl-14 pr-4 font-inter text-[16px] font-medium text-[#333] outline-none placeholder:text-[#333]/50 focus:ring-2 focus:ring-[#faa61a]'
+                              : 'w-full bg-white border border-white/40 rounded-xl text-[16px] outline-none placeholder:text-[#8a8a8a] py-4 md:py-5 pr-12 pl-14 shadow-[0_12px_32px_rgba(0,0,0,.22)] focus:ring-2 focus:ring-[#ffd44d] focus:border-transparent'}
                         />
                         {/*{searchTerm && (*/}
                         {/*  <button*/}
@@ -438,11 +442,14 @@ export default function TravelESimPage() {
                             </div>
                         )}
                       </div>
+                      {showFigmaMarketing && <>
+                        <hr className="m-0 border-t-[1.5px] border-[#ccc]" />
+                        <HaveEsimRow />
+                      </>}
+                      </div>
                     </div>
                 </div>
             </section>
-
-      {showFigmaMarketing && <HaveEsimSection />}
 
       {/* Main Content Section */}
       <main className="relative z-0 flex flex-col">
@@ -470,34 +477,26 @@ export default function TravelESimPage() {
         {/* Notice and Country Grid */}
         <section className="bg-[#f7f7f7] pt-6 pb-10 md:pt-8 md:pb-16">
         <div className={`container ${showFigmaMarketing ? '2xl:max-w-[calc(1280px+12rem)]' : ''}`}>
-          <div className="max-w-[760px] mb-6 md:mb-8 xl:mb-10">
-            <h2 className="font-inter font-bold text-[26px] sm:text-[30px] lg:text-[36px] leading-tight text-[#333]">
+          <div className={showFigmaMarketing ? 'mb-1.5' : 'max-w-[760px] mb-6 md:mb-8 xl:mb-10'}>
+            <h2 className={`${showFigmaMarketing ? 'font-koho lg:leading-[48px]' : 'font-inter'} font-bold text-[26px] sm:text-[30px] lg:text-[36px] leading-tight text-[#333]`}>
               {showFigmaMarketing ? <>{copy.popularTitle} <span className="text-[#ED1B2F]">{copy.popularHighlight}</span></> : t('bannerTitle')}
             </h2>
-            {showFigmaMarketing && <p className="mt-3 text-[16px] text-[#666]">{copy.popularText}</p>}
-            {showFigmaMarketing && (
-              <nav ref={tabBarRef} aria-label={tFlow('tabs.ariaLabel')} className="mt-5 flex w-full max-w-full items-center gap-1 overflow-x-auto rounded-2xl bg-[#ddd] p-[6px] [scrollbar-width:none] sm:inline-flex sm:w-auto sm:gap-2 [&::-webkit-scrollbar]:hidden">
-                {tabs.map(tab => {
-                  const isActive = activeTab === tab.id;
-                  return (
-                    <Link
-                      key={tab.id}
-                      href={tabHref(tab.id)}
-                      scroll={false}
-                      onClick={() => onTabClick(tab.id)}
-                      className={`flex h-10 flex-auto shrink-0 items-center justify-center whitespace-nowrap rounded-[14px] px-3 font-inter text-[13px] font-semibold leading-5 transition-colors sm:flex-none sm:px-4 sm:text-sm ${
-                        isActive
-                          ? 'bg-[#faa61a] text-white shadow-[inset_-3px_2px_3.2px_rgba(0,0,0,0.25)]'
-                          : 'bg-white text-[#d0d0d0] hover:text-[#666]'
-                      }`}
-                    >
-                      {tab.label}
-                    </Link>
-                  );
-                })}
-              </nav>
-            )}
+            {showFigmaMarketing && <p className="mt-1 font-inter text-[14px] text-[#333] sm:text-[16px]">{copy.popularText}</p>}
           </div>
+          {showFigmaMarketing && (
+            <TravelEsimTabBar
+              ref={tabBarRef}
+              ariaLabel={tFlow('tabs.ariaLabel')}
+              className="mb-8 xl:mb-10"
+              tabs={tabs}
+              isActive={(id) => activeTab === id}
+              renderLink={(tab, { className, children, ...rest }) => (
+                <Link href={tabHref(tab.id)} scroll={false} onClick={() => onTabClick(tab.id)} className={className} {...rest}>
+                  {children}
+                </Link>
+              )}
+            />
+          )}
           {!showFigmaMarketing && <p className="font-inter text-[13px] md:text-[14px] text-[#555] mb-5">
             {t.rich('notice', {
               link: (chunks) => (

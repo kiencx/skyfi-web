@@ -12,16 +12,12 @@ import HeaderVJ from "@/app/components/HeaderVJ";
 import HeaderCart from "@/app/components/HeaderCart";
 import useMyEsim from "@/app/hooks/useMyEsim";
 import useTravelEsimTabs from "@/app/hooks/useTravelEsimTabs";
-import { trackPageView, trackBeginCheckout, trackSearch } from "@/app/utils/trackingHelper";
+import TravelEsimTabBar from "@/app/components/travel-esim/TravelEsimTabBar";
+import { trackPageView, trackBeginCheckout } from "@/app/utils/trackingHelper";
 import { bssLocaleHeaders } from '@/app/utils/bssLocale';
-import { matchesDestinationSearch } from '@/app/utils/bssCatalog';
 
 // Placeholder Icons
-const SearchIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
 const ChevronLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>;
-const ArrowRightIcon = () => <svg width="24" height="25" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path fillRule="evenodd" clipRule="evenodd" d="M8.29289 6.05559C8.68342 5.66507 9.31658 5.66507 9.70711 6.05559L15.7071 12.0556C16.0976 12.4461 16.0976 13.0793 15.7071 13.4698L9.70711 19.4698C9.31658 19.8603 8.68342 19.8603 8.29289 19.4698C7.90237 19.0793 7.90237 18.4461 8.29289 18.0556L13.5858 12.7627L8.29289 7.46981C7.90237 7.07928 7.90237 6.44612 8.29289 6.05559Z" fill="#333333"/>
-</svg>;
 const getCountryFlagUrl = (country) => {
   const isoCode = String(country.iso_code || country.code || '').trim().toLowerCase();
   return isoCode ? `https://flagcdn.com/w160/${isoCode}.png` : null;
@@ -82,14 +78,10 @@ export default function CountryESimPlansPage() {
   const regions = searchParams.get( 'regions' );
 
   const [countryDetails, setCountryDetails] = useState(null);
-  const [allCountries, setAllCountries] = useState([]);
+  const [, setAllCountries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showFilterPopover, setShowFilterPopover] = useState(false);
   const [packages, setPackages] = useState([]);
-  const searchInputRef = useRef(null);
-  const popoverRef = useRef(null);
 
   const [ activeTab, setActiveTab ] = useState( typeParam );
   const router = useRouter();
@@ -129,8 +121,6 @@ export default function CountryESimPlansPage() {
   useEffect(() => {
     // Update activeTab when URL query parameter changes
     setActiveTab(typeParam);
-    setSearchTerm(''); // Clear search when switching tabs
-    setShowFilterPopover(false); // Close popover when switching tabs
   }, [typeParam]);
 
   useEffect(() => {
@@ -205,107 +195,6 @@ export default function CountryESimPlansPage() {
     return packageItems.map((pkg) => adaptPublicV2Package(pkg, countryDetails));
   };
 
-  // Filter countries based on search term for popover
-  const filteredCountries = allCountries.filter(country =>
-    matchesDestinationSearch(country, searchTerm) &&
-    String(country.code || country.id).toLowerCase() !== countrySlug.toLowerCase() // Exclude current country
-  );
-
-  // Handle click outside popover to close it
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (popoverRef.current && !popoverRef.current.contains(event.target) &&
-          searchInputRef.current && !searchInputRef.current.contains(event.target)) {
-        setShowFilterPopover(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const handleSearchInputFocus = () => {
-    if (allCountries.length > 0) {
-      setShowFilterPopover(true);
-    }
-  };
-
-  const handleSearchInputChange = (e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    if (allCountries.length > 0) {
-      setShowFilterPopover(true);
-      if (value.length >= 2) {
-        const results = allCountries.filter(c => matchesDestinationSearch(c, value));
-        trackSearch(value, results.length, { search_type: 'autocomplete', search_category: 'country' });
-      }
-    }
-  };
-
-  const handlePopoverItemClick = (country) => {
-    setShowFilterPopover(false);
-    setSearchTerm('');
-  };
-
-  const renderPopoverItems = (countries) => {
-    if (isLoading) {
-      return <div className="text-center py-[20px] text-[#666]">{tPage('loading')}</div>;
-    }
-
-    if (!countries || countries.length === 0) {
-      if (searchTerm && allCountries.length > 0) {
-        return (
-            <div className="text-center py-[20px] text-[#666]">
-              <p>{tPage('noResultFor', {searchTerm})}</p>
-              <button
-                  onClick={() => {
-                    setSearchTerm('');
-                    setShowFilterPopover(false);
-                  }}
-                  className="mt-2 text-blue-600 hover:underline"
-              >
-                {tPage('clearSearch')}
-              </button>
-            </div>
-        );
-      }
-      return <div className="text-center py-[20px] text-[#666]">{tPage('noCountryFound')}</div>;
-    }
-    return (
-      <div className="max-h-[400px] overflow-y-auto">
-        {countries.map(country => (
-          <Link
-            key={country.id}
-          href={`/esim/${String(country.code || country.id).toLowerCase()}?type=${activeTab}&regions=${getRegionTypeForTab(activeTab)}&src=${viewSrc}`}
-            className="block"
-            onClick={() => handlePopoverItemClick(country)}
-          >
-            <div className="bg-white hover:bg-gray-50 transition-colors duration-200 flex flex-row items-center p-[12px] gap-[12px] border-b border-[#F1F1F1] last:border-b-0">
-              {country.code && (
-                <div className="w-[40px] h-[30.5px] relative flex-shrink-0">
-                  <img
-                    src={getCountryFlagUrl(country) || `/assets/flags/${country.code.toLowerCase()}.png`}
-                    alt={country.name}
-                    className="rounded-[4px] border object-cover border-[#F1F1F1] w-full h-full"
-                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                  />
-                </div>
-              )}
-              <span className="font-inter font-semibold text-[16px] text-[#333] flex-1 min-w-0 line-clamp-1">
-                {country.name}
-              </span>
-              <button className="text-[#A1A1A1] hover:text-[#333]">
-                <ArrowRightIcon />
-              </button>
-            </div>
-          </Link>
-        ))}
-      </div>
-    );
-  };
-
   const onBuyNowClick = (plan, quantity) => {
     trackBeginCheckout({
       cart_total: plan.selling_price * quantity,
@@ -326,78 +215,21 @@ export default function CountryESimPlansPage() {
     <div className="flex flex-col min-h-screen bg-[#F5F5F5]">
       {viewSrc==="vj"?<HeaderCart/>:<Header />}
 
-       {/* Banner Section */}
-            <div className="relative h-[240px] md:h-[240px] flex flex-col items-start justify-start pt-[20px]"
-                 style={{backgroundImage: 'url(/assets/bg-esim.png)', backgroundSize: 'cover', backgroundPosition: 'center'}}
-            >
-
-                <div className="z-10 container   flex flex-col items-start gap-[24px]  w-full">
-                    <h1 className="font-semibold text-[24px] md:text-[32px] text-center text-[#333]">
-                        {tbaner('bannerTitle')}
-                    </h1>
-                    <div className="relative w-full max-w-[680px]">
-                        <div className="absolute inset-y-0 left-0 pl-[20px] flex items-center pointer-events-none">
-                            <SearchIcon />
-                        </div>
-                        <input
-                            ref={searchInputRef}
-                            type="search"
-                            placeholder={tbaner('searchPlaceholder')}
-                            value={searchTerm}
-                            onChange={handleSearchInputChange}
-                            onFocus={handleSearchInputFocus}
-                            className="w-full bg-white border border-[#DDDDDD] rounded-[8px] text-[16px] outline-none placeholder:text-[#A1A1A1] py-[20px] pr-[48px] pl-[52px] focus:ring-2 focus:ring-primary focus:border-transparent"
-                        />
-                        {/*{searchTerm && (*/}
-                        {/*  <button*/}
-                        {/*    onClick={() => {*/}
-                        {/*      setSearchTerm('');*/}
-                        {/*      setShowFilterPopover(false);*/}
-                        {/*    }}*/}
-                        {/*    className="absolute inset-y-0 right-0 pr-[20px] flex items-center text-[#A1A1A1] hover:text-[#333] transition-colors"*/}
-                        {/*  >*/}
-                        {/*    X*/}
-                        {/*  </button>*/}
-                        {/*)}*/}
-
-                        {/* Filter Popover */}
-                        {showFilterPopover && (
-                            <div
-                                ref={popoverRef}
-                                className="absolute top-full left-0 right-0 mt-[8px] bg-white border border-[#DDDDDD] rounded-[8px] shadow-lg z-50 max-h-[400px] overflow-hidden"
-                            >
-                                {renderPopoverItems(filteredCountries)}
-                            </div>
-                        )}
-                    </div>
-                </div>
-                {/* cards 1 graphic - simplified or omitted for now */}
-            </div>
-
       {/* Main Content Section */}
       <main className="w-full flex flex-col items-center">
         {/* Country Title and Plan Grid */}
-        <div className="w-full px-4 xl:container xl:px-[90px] py-3 md:py-3 flex flex-col gap-[20px]">
-          <nav ref={tabBarRef} aria-label={tFlow('tabs.ariaLabel')} className="inline-flex w-fit items-center gap-2 rounded-2xl bg-[#ddd] p-[6px]">
-            {tabs.map((tab) => {
-              const isActive = isTabActive(tab.id);
-              return (
-                <Link
-                  key={tab.id}
-                  href={`/${locale}${tabHref(tab.id)}`}
-                  scroll={false}
-                  onClick={() => onTabClick(tab.id)}
-                  className={`h-10 rounded-[14px] px-4 py-[10px] font-inter text-sm font-semibold leading-5 transition-colors ${
-                    isActive
-                      ? 'bg-[#faa61a] text-white shadow-[inset_-3px_2px_3.2px_rgba(0,0,0,0.25)]'
-                      : 'bg-white text-[#d0d0d0] hover:text-[#666]'
-                  }`}
-                >
-                  {tab.label}
-                </Link>
-              );
-            })}
-          </nav>
+        <div className="w-full px-4 xl:container xl:px-[90px] pt-6 pb-3 md:pt-10 flex flex-col gap-[20px]">
+          <TravelEsimTabBar
+            ref={tabBarRef}
+            ariaLabel={tFlow('tabs.ariaLabel')}
+            tabs={tabs}
+            isActive={isTabActive}
+            renderLink={(tab, { className, children, ...rest }) => (
+              <Link href={`/${locale}${tabHref(tab.id)}`} scroll={false} onClick={() => onTabClick(tab.id)} className={className} {...rest}>
+                {children}
+              </Link>
+            )}
+          />
           <p className="font-inter text-[14px] md:text-[16px] text-[#333] ">
             {tbaner.rich('notice', {
               link: (chunks) => (

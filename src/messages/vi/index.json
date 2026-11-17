@@ -3343,9 +3343,9 @@
   },
   "travelEsimFlow": {
     "tabs": {
-      "national": "Danh sách quốc gia",
-      "regional": "Khu vực",
-      "global": "Toàn cầu",
+      "national": "eSIM quốc gia",
+      "regional": "eSIM Khu vực",
+      "global": "eSIM Toàn cầu",
       "ariaLabel": "Loại eSIM"
     },
     "errorWithDetail": "Đã xảy ra lỗi: {error}",
