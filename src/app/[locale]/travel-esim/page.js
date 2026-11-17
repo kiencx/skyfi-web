@@ -476,7 +476,7 @@ export default function TravelESimPage() {
             </h2>
             {showFigmaMarketing && <p className="mt-3 text-[16px] text-[#666]">{copy.popularText}</p>}
             {showFigmaMarketing && (
-              <nav ref={tabBarRef} aria-label={tFlow('tabs.ariaLabel')} className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-[#ddd] p-[6px]">
+              <nav ref={tabBarRef} aria-label={tFlow('tabs.ariaLabel')} className="mt-5 flex w-full max-w-full items-center gap-1 overflow-x-auto rounded-2xl bg-[#ddd] p-[6px] [scrollbar-width:none] sm:inline-flex sm:w-auto sm:gap-2 [&::-webkit-scrollbar]:hidden">
                 {tabs.map(tab => {
                   const isActive = activeTab === tab.id;
                   return (
@@ -485,7 +485,7 @@ export default function TravelESimPage() {
                       href={tabHref(tab.id)}
                       scroll={false}
                       onClick={() => onTabClick(tab.id)}
-                      className={`h-10 rounded-[14px] px-4 py-[10px] font-inter text-sm font-semibold leading-5 transition-colors ${
+                      className={`flex h-10 flex-auto shrink-0 items-center justify-center whitespace-nowrap rounded-[14px] px-3 font-inter text-[13px] font-semibold leading-5 transition-colors sm:flex-none sm:px-4 sm:text-sm ${
                         isActive
                           ? 'bg-[#faa61a] text-white shadow-[inset_-3px_2px_3.2px_rgba(0,0,0,0.25)]'
                           : 'bg-white text-[#d0d0d0] hover:text-[#666]'
