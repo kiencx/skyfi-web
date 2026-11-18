@@ -8,6 +8,7 @@ import CmpCookieConsent from "./components/CmpCookieConsent";
 // Khi bật: GA4 chờ đồng ý COOKIE_ANALYTICS và không chạy nếu SDK CMP không tải được (fail-closed).
 const CMP_ENABLED = process.env.NEXT_PUBLIC_CMP_ENABLED === "true";
 const GA_ID = "G-HBXX8BHMEV";
+// Cấu hình gtag (dùng chung cho cả hai trường hợp bật/tắt CMP).
 const GA_CONFIG = `
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -15,6 +16,8 @@ const GA_CONFIG = `
   gtag('js', new Date());
   gtag('config', '${GA_ID}');
 `;
+// Đoạn tự nạp gtag.js rồi chạy GA_CONFIG. Khi bật CMP, đoạn này nằm trong <script type="text/plain">
+// nên trình duyệt KHÔNG chạy; SDK CMP sẽ tạo script mới chạy nó khi khách đồng ý COOKIE_ANALYTICS.
 const GA_LOADER = `
   (function () {
     var s = document.createElement('script');

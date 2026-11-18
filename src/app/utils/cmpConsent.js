@@ -8,8 +8,10 @@ export const CMP_ENABLED = process.env.NEXT_PUBLIC_CMP_ENABLED === 'true';
 // Các mã có tag phụ thuộc trên trang. Thêm mã mới ở đây nếu có tag mới.
 export const GATED_CODES = ['COOKIE_ANALYTICS', 'COOKIE_MARKETING'];
 
+// Tên sự kiện window phát ra khi một mã được đồng ý (detail = mã).
 const EVENT = 'skyfi:cmp-consent';
 
+// Lưu trạng thái trên window (không phải biến module) để mọi bundle/chunk của Next.js dùng chung một chỗ.
 const granted = () => {
   if (typeof window === 'undefined') return {};
   window.__skyfiCmpConsent ??= {};
@@ -25,6 +27,7 @@ export const grantConsent = (code) => {
 /** Fail-closed: chưa có tín hiệu từ SDK thì coi như chưa đồng ý. */
 export const isConsentGranted = (code) => granted()[code] === true;
 
+/** Đăng ký nghe sự kiện đồng ý; trả về hàm hủy đăng ký (dùng trong useEffect cleanup). */
 export const onConsentGranted = (callback) => {
   const listener = (event) => callback(event.detail);
   window.addEventListener(EVENT, listener);
