@@ -45,21 +45,21 @@ const TravelEsimTabBar = forwardRef(function TravelEsimTabBar({ tabs, isActive, 
       aria-label={ariaLabel}
       className={`w-full overflow-x-auto border-b-2 border-[#d9d9d9] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${className}`}
     >
-      <div className="flex w-max min-w-full items-center gap-1 min-[390px]:gap-1.5 min-[420px]:gap-2 sm:gap-4 md:gap-6 lg:gap-9">
+      <div className="flex w-full items-center md:w-max md:min-w-full md:gap-6 lg:gap-9">
         {tabs.map((tab, index) => {
           const active = isActive(tab.id);
           const Icon = ICONS[tab.id];
           return (
-            <div key={tab.id} className="flex shrink-0 items-center gap-1 min-[390px]:gap-1.5 min-[420px]:gap-2 sm:gap-4 md:gap-6 lg:gap-9">
+            <div key={tab.id} className="flex min-w-0 flex-1 items-center md:flex-none md:shrink-0 md:gap-6 lg:gap-9">
               {index > 0 && <span aria-hidden="true" className="h-4 w-px shrink-0 bg-[#d9d9d9] sm:h-6 lg:h-8" />}
               {renderLink(tab, {
-                className: `relative -mb-[2px] flex h-11 items-center gap-1 whitespace-nowrap font-inter text-[12px] min-[390px]:text-[13px] min-[420px]:text-[14px] font-semibold transition-colors sm:h-12 sm:gap-2 sm:text-[17px] md:text-[20px] lg:text-[28px] ${
-                  active ? 'text-[#de2710]' : 'text-[#a5a5a4] hover:text-[#666]'
+                className: `relative -mb-[2px] flex h-11 min-w-0 flex-1 items-center justify-center gap-1 md:flex-none md:justify-start whitespace-nowrap font-inter text-sm max-[359px]:text-[13px] transition-colors sm:h-12 sm:gap-2 sm:text-[16px] md:text-[18px] ${
+                  active ? 'font-semibold text-[#de2710]' : 'font-medium text-[#a5a5a4] hover:text-[#666]'
                 }`,
                 'aria-current': active ? 'page' : undefined,
                 children: (
                   <>
-                    {Icon && <Icon className={`h-4 w-4 shrink-0 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-8 lg:w-8 ${tab.id === 'national' && active ? 'text-[#ed1b2f]' : ''}`} />}
+                    {Icon && <Icon className={`hidden h-4 w-4 shrink-0 min-[400px]:block sm:h-5 sm:w-5 md:h-6 md:w-6 ${tab.id === 'national' && active ? 'text-[#ed1b2f]' : ''}`} />}
                     {tab.label}
                     <span
                       aria-hidden="true"
