@@ -17,6 +17,7 @@ import TravelSimPackagePage from '@/app/components/vj2/TravelSimPackagePage';
 import SimPopup from "@/app/components/vj2/SimPopup";
 import TravelSimMultiPackagePage from "@/app/components/vj2/TravelSimMultiPackagePage";
 import Script from 'next/script';
+import ConsentGate from '@/app/components/ConsentGate';
 import Head from "next/head";
 
 
@@ -240,7 +241,9 @@ export default function Vj2Page() {
     // Default form view
     return (
         <>
+            {/* GTM có thể nạp tag quảng cáo → chờ đồng ý COOKIE_MARKETING khi bật CMP. */}
             {process.env.NEXT_PUBLIC_API_BASE_URL?.includes("skyfi.pro") && (
+                <ConsentGate code="COOKIE_MARKETING">
                 <Head>
                     <script dangerouslySetInnerHTML={{
                         __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -250,6 +253,7 @@ export default function Vj2Page() {
         })(window,document,'script','dataLayer','GTM-T54TSR6P');`
                     }} />
                 </Head>
+                </ConsentGate>
             )}
             <HeaderVJ/>
             <div className=" bg-gray-100 flex items-center justify-center px-4 py-10 md:py-20 ">
@@ -409,6 +413,7 @@ export default function Vj2Page() {
             )}
             {process.env.NEXT_PUBLIC_API_BASE_URL?.includes("skyfi.pro") && (
                 <>
+                    <ConsentGate code="COOKIE_ANALYTICS">
                     <Script
                         src="https://www.googletagmanager.com/gtag/js?id=G-HR88CB3F4Y"
                         strategy="afterInteractive"
@@ -421,10 +426,14 @@ export default function Vj2Page() {
                         gtag('config', 'G-HR88CB3F4Y');
                       `}
                     </Script>
+                    </ConsentGate>
+                    {/* Bản GTM cho trình duyệt tắt JS: khi bật CMP không render (không có JS thì không xin được đồng ý). */}
+                    <ConsentGate code="COOKIE_MARKETING">
                     <noscript>
                         <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T54TSR6P"
                                 height="0" width="0" style="display:none;visibility:hidden"></iframe>
                     </noscript>
+                    </ConsentGate>
                 </>
             )}
 
