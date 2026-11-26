@@ -337,7 +337,7 @@ export default function BssPackageSelector({
                       }`}
                     >
                       <p className="font-semibold text-[#333]">{pkg.name}</p>
-                      <p className="mt-2 text-sm text-[#666]">{pkg.provider_name || 'eSIM'} · {pkg.package_type === 'TOP_UP' ? t('typeTopup') : t('typeNew')}</p>
+                      <p className="mt-2 text-sm text-[#666]">SkyFi · {pkg.package_type === 'TOP_UP' ? t('typeTopup') : t('typeNew')}</p>
                       <p className="mt-3 font-bold text-[#faa61a]">{formatPrice(pkg.selling_price, pkg.currency, locale)}</p>
                     </button>
                   );
