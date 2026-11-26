@@ -1,8 +1,7 @@
 "use client";
 
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Link } from '../../i18n/navigation';
 import { useUserState } from '../stores/user';
@@ -10,7 +9,7 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import UserDropdown from "./UserDropdown";
 
 export default function Header() {
-  const router = useRouter();
+  const locale = useLocale();
   const userButtonRef = useRef( null );
   const t = useTranslations();
   const [ isUserDropdownOpen, setIsUserDropdownOpen ] = useState( false );
@@ -70,9 +69,9 @@ export default function Header() {
   return (
     <header className="w-full flex sticky top-0 left-0 z-50 items-center justify-between px-4 sm:px-6 lg:px-20 h-[80px] bg-white border-b border-[#F1F1F1] " style={ { fontFamily: 'Inter' } }>
       {/* Logo */ }
-      <div className="flex items-center cursor-pointer" onClick={ () => router.push( '/' ) }>
+      <a href={ `https://skyfi.vn/${ locale === 'en' ? 'en' : 'vi' }` } className="flex items-center cursor-pointer">
         <Image src="/assets/logo.svg" alt="SkyFi Logo" width={ 120 } height={ 40 } priority className="max-w-[100px] sm:max-w-[120px]" />
-      </div>
+      </a>
 
       {/* Actions - Icons only on mobile/tablet, text+icons on desktop */ }
       <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 justify-end">
